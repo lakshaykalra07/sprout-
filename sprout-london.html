@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprout London</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #F5F0E8; --dark: #0E0E0E; --green: #2D5A27; --green-light: #4A8C42;
+    --muted: #8A8A7A; --card-bg: #1A1A1A; --error: #e05c5c;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--dark); color: var(--cream); min-height: 100vh; overflow-x: hidden; }
+
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* AUTH */
+  #authScreen { align-items: center; justify-content: center; background: radial-gradient(ellipse 80% 60% at 50% 40%, #1e3d1a 0%, #0E0E0E 70%); }
+  .auth-box { width: 100%; max-width: 420px; padding: 2rem; animation: fadeUp 0.6s ease both; }
+  .auth-logo { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 700; background: linear-gradient(135deg, #a8d5a2 0%, #4A8C42 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; margin-bottom: 0.3rem; }
+  .auth-tagline { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 2.5rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .auth-tabs { display: flex; background: #1a1a1a; border-radius: 12px; padding: 4px; margin-bottom: 2rem; border: 1px solid #2a2a2a; }
+  .auth-tab { flex: 1; padding: 0.7rem; text-align: center; border-radius: 9px; cursor: pointer; font-size: 0.88rem; font-weight: 500; transition: all 0.2s; color: var(--muted); border: none; background: transparent; font-family: 'DM Sans', sans-serif; }
+  .auth-tab.active { background: var(--green); color: var(--cream); }
+  .auth-field { margin-bottom: 1rem; }
+  .auth-field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  .auth-field input { width: 100%; background: #1a1a1a; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; outline: none; }
+  .auth-field input:focus { border-color: var(--green-light); }
+  .auth-submit { width: 100%; background: var(--green); color: var(--cream); border: none; padding: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 500; cursor: pointer; margin-top: 0.5rem; transition: background 0.2s; font-family: 'DM Sans', sans-serif; }
+  .auth-submit:hover { background: var(--green-light); }
+  .auth-ghost { width: 100%; background: #1a1a1a; color: var(--muted); border: 1.5px solid #2a2a2a; padding: 1rem; border-radius: 10px; font-size: 0.95rem; font-weight: 500; cursor: pointer; margin-top: 0.8rem; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .auth-ghost:hover { border-color: var(--green-light); color: var(--cream); }
+  .auth-divider { text-align: center; color: var(--muted); font-size: 0.8rem; margin: 1rem 0; }
+  .auth-error { color: var(--error); font-size: 0.82rem; margin-top: 0.8rem; text-align: center; min-height: 1.2rem; }
+
+  /* INTRO */
+  #intro { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--dark); z-index: 100; transition: opacity 0.8s ease, transform 0.8s ease; }
+  #intro.hide { opacity: 0; transform: scale(1.04); pointer-events: none; }
+  .intro-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 40%, #1e3d1a 0%, #0E0E0E 70%); }
+  .intro-grain { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); opacity: 0.4; }
+  .intro-content { position: relative; text-align: center; padding: 2rem; }
+  .sprout-logo { font-family: 'Playfair Display', serif; font-size: clamp(3rem, 10vw, 6rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1; margin-bottom: 0.3rem; background: linear-gradient(135deg, #a8d5a2 0%, #4A8C42 50%, #2D5A27 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: fadeUp 1s ease both; }
+  .sprout-sub { font-size: 0.95rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 3rem; animation: fadeUp 1s 0.2s ease both; }
+  .intro-tagline { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(1.1rem, 3vw, 1.5rem); color: var(--cream); opacity: 0.85; max-width: 480px; margin: 0 auto 2.5rem; line-height: 1.5; animation: fadeUp 1s 0.35s ease both; }
+  .intro-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; animation: fadeUp 1s 0.5s ease both; }
+  .start-btn { background: var(--green); color: var(--cream); border: none; padding: 1rem 2.8rem; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500; border-radius: 50px; cursor: pointer; transition: background 0.25s, transform 0.2s; }
+  .start-btn:hover { background: var(--green-light); transform: translateY(-2px); }
+
+  /* NAV */
+  .app-nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 2rem; background: rgba(14,14,14,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid #1a1a1a; }
+  .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; background: linear-gradient(135deg, #a8d5a2, #4A8C42); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .nav-right { display: flex; align-items: center; gap: 1rem; }
+  .nav-favs-btn { background: transparent; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .nav-favs-btn:hover { border-color: var(--green-light); }
+  .nav-user { font-size: 0.82rem; color: var(--muted); }
+  .nav-signout { background: transparent; border: none; color: var(--muted); font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: underline; }
+  .nav-signout:hover { color: var(--cream); }
+
+  /* QUIZ */
+  #quiz { background: var(--dark); }
+  .quiz-subheader { padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+  .progress-wrap { display: flex; gap: 6px; }
+  .progress-dot { width: 28px; height: 4px; border-radius: 2px; background: #333; transition: background 0.4s; }
+  .progress-dot.done { background: var(--green-light); }
+  .progress-dot.active { background: var(--cream); }
+  .question-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+  .q-card { width: 100%; max-width: 680px; animation: slideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .q-number { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green-light); margin-bottom: 1rem; }
+  .q-text { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.25; margin-bottom: 2.5rem; font-weight: 700; }
+  .q-text em { font-style: italic; color: #a8d5a2; }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .options-grid .option-btn:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 50%; margin: 0 auto; }
+  .option-btn { background: #1A1A1A; border: 1.5px solid #2A2A2A; color: var(--cream); padding: 1.2rem 1.4rem; border-radius: 14px; cursor: pointer; text-align: left; transition: all 0.2s; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; line-height: 1.4; }
+  .option-btn .opt-emoji { font-size: 1.5rem; display: block; margin-bottom: 0.5rem; }
+  .option-btn .opt-label { font-weight: 500; display: block; }
+  .option-btn .opt-sub { font-size: 0.8rem; color: var(--muted); display: block; margin-top: 0.2rem; }
+  .option-btn:hover { border-color: var(--green-light); background: #222; transform: translateY(-2px); }
+  .option-btn.selected { border-color: var(--green-light); background: #1e3d1a; }
+
+  /* LOADING */
+  #loading { position: fixed; inset: 0; background: var(--dark); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
+  #loading.active { display: flex; }
+  .loading-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-style: italic; color: var(--cream); opacity: 0.8; animation: pulse 1.5s ease-in-out infinite; }
+  .loading-dots { display: flex; gap: 8px; }
+  .loading-dot { width: 8px; height: 8px; background: var(--green-light); border-radius: 50%; animation: bounce 1.2s ease-in-out infinite; }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* RESULTS */
+  #results { background: var(--dark); }
+  .results-hero { padding: 3rem 2rem 2rem; text-align: center; background: radial-gradient(ellipse 100% 100% at 50% 0%, #1e3d1a 0%, transparent 70%); }
+  .results-eyebrow { font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.8rem; }
+  .results-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
+  .results-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2.5rem; }
+  .restaurants-list { padding: 0 1.5rem 4rem; max-width: 780px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  /* CARDS */
+  .restaurant-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid #222; animation: fadeUp 0.6s ease both; transition: transform 0.2s, border-color 0.2s; }
+  .restaurant-card:nth-child(1) { animation-delay: 0.1s; }
+  .restaurant-card:nth-child(2) { animation-delay: 0.25s; }
+  .restaurant-card:nth-child(3) { animation-delay: 0.4s; }
+  .restaurant-card:hover { transform: translateY(-4px); border-color: #2D5A27; }
+  .card-image-wrap { height: 200px; position: relative; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
+  .card-image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+  .restaurant-card:hover .card-image-wrap img { transform: scale(1.04); }
+  .card-placeholder { font-size: 4rem; }
+  .card-rank { position: absolute; top: 1rem; left: 1rem; background: var(--green); color: var(--cream); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.8rem; border-radius: 50px; }
+  .card-rating-badge { position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: var(--cream); font-size: 0.85rem; font-weight: 500; padding: 0.3rem 0.7rem; border-radius: 50px; }
+  .card-body { padding: 1.4rem 1.6rem; }
+  .card-cuisine { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.4rem; }
+  .card-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .card-area { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.9rem; }
+  .card-vibe { font-size: 0.88rem; color: #c8c8b8; line-height: 1.6; margin-bottom: 1.2rem; font-style: italic; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid #252525; }
+  .card-price { font-size: 0.85rem; color: var(--muted); }
+  .card-actions { display: flex; gap: 0.6rem; align-items: center; }
+  .fav-btn { background: transparent; border: 1.5px solid #333; color: var(--muted); width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+  .fav-btn:hover { border-color: #e05c7a; }
+  .fav-btn.saved { border-color: #e05c7a; background: rgba(224,92,122,0.1); }
+  .maps-btn { background: var(--green); color: var(--cream); border: none; padding: 0.55rem 1.4rem; border-radius: 50px; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.2s; font-family: 'DM Sans', sans-serif; text-decoration: none; display: inline-flex; align-items: center; }
+  .maps-btn:hover { background: var(--green-light); }
+
+  /* FAVOURITES PANEL */
+  #favsPanel { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; justify-content: flex-end; }
+  #favsPanel.active { display: flex; }
+  .favs-drawer { background: #111; width: 100%; max-width: 400px; height: 100vh; overflow-y: auto; padding: 2rem; animation: slideInRight 0.35s cubic-bezier(0.22,1,0.36,1) both; border-left: 1px solid #222; }
+  .favs-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+  .favs-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; }
+  .favs-close { background: transparent; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
+  .fav-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #1a1a1a; }
+  .fav-item-info { flex: 1; }
+  .fav-item-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .fav-item-area { font-size: 0.8rem; color: var(--muted); }
+  .fav-remove { background: transparent; border: none; color: #555; cursor: pointer; font-size: 1rem; padding: 0.3rem; }
+  .fav-remove:hover { color: var(--error); }
+  .favs-empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-style: italic; line-height: 1.8; }
+
+  .restart-wrap { text-align: center; padding: 0 1.5rem 3rem; }
+  .restart-btn { background: transparent; border: 1.5px solid #333; color: var(--muted); padding: 0.7rem 2rem; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+  .restart-btn:hover { border-color: var(--green-light); color: var(--cream); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3d1a; color: var(--cream); padding: 0.8rem 1.6rem; border-radius: 50px; font-size: 0.88rem; z-index: 999; transition: transform 0.35s cubic-bezier(0.22,1,0.36,1); white-space: nowrap; border: 1px solid var(--green); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes slideInRight { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(-10px); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-text" id="loadingText">Scanning London…</div>
+  <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+</div>
+
+<!-- FAVOURITES PANEL -->
+<div id="favsPanel" onclick="closeFavsOutside(event)">
+  <div class="favs-drawer">
+    <div class="favs-header">
+      <div class="favs-title">❤️ Saved Spots</div>
+      <button class="favs-close" onclick="closeFavs()">✕</button>
+    </div>
+    <div id="favsList"></div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div id="authScreen" class="screen active">
+  <div class="auth-box">
+    <div class="auth-logo">Sprout</div>
+    <div class="auth-tagline">London · Vegetarian Guide</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign in</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Create account</button>
+    </div>
+    <div id="loginForm">
+      <div class="auth-field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+      <button class="auth-submit" onclick="handleLogin()">Sign in →</button>
+      <div class="auth-divider">or</div>
+      <button class="auth-ghost" onclick="guestMode()">Continue without account</button>
+    </div>
+    <div id="signupForm" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="signupEmail" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signupPassword" placeholder="At least 6 characters"></div>
+      <button class="auth-submit" onclick="handleSignup()">Create account →</button>
+      <div class="auth-divider">or</div>
+      <button class="auth-ghost" onclick="guestMode()">Continue without account</button>
+    </div>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div id="intro" style="display:none">
+  <div class="intro-bg"></div>
+  <div class="intro-grain"></div>
+  <div class="intro-content">
+    <div class="sprout-logo">Sprout</div>
+    <div class="sprout-sub">London · Vegetarian Guide</div>
+    <p class="intro-tagline">Not another list. A recommendation from someone who actually knows.</p>
+    <div class="intro-btns">
+      <button class="start-btn" onclick="startQuiz()">Find my spot tonight →</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+  <div class="app-nav">
+    <div class="nav-logo">Sprout</div>
+    <div class="nav-right">
+      <button class="nav-favs-btn" onclick="openFavs()">❤️ Saved</button>
+      <span class="nav-user" id="navUser"></span>
+      <button class="nav-signout" id="navSignout" onclick="handleSignout()" style="display:none">Sign out</button>
+    </div>
+  </div>
+  <div class="quiz-subheader">
+    <div style="font-size:0.8rem;color:var(--muted)">Answer a few questions</div>
+    <div class="progress-wrap" id="progressDots"></div>
+  </div>
+  <div class="question-stage" id="questionStage"></div>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen">
+  <div class="app-nav">
+    <div class="nav-logo">Sprout</div>
+    <div class="nav-right">
+      <button class="nav-favs-btn" onclick="openFavs()">❤️ Saved</button>
+      <span class="nav-user" id="navUser2"></span>
+      <button class="nav-signout" id="navSignout2" onclick="handleSignout()" style="display:none">Sign out</button>
+    </div>
+  </div>
+  <div class="results-hero">
+    <div class="results-eyebrow">Your picks for tonight</div>
+    <div class="results-title" id="resultsTitle">We found your spot.</div>
+    <div class="results-sub" id="resultsSub">Based on your vibe, here's where we'd send you.</div>
+  </div>
+  <div class="restaurants-list" id="restaurantsList"></div>
+  <div class="restart-wrap"><button class="restart-btn" onclick="restart()">↩ Start over</button></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://olmfwrlhloxkdrarlfmc.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_VihKP57OQc4ydpeXJEzUhA_xwK_QgWW';
+const GOOGLE_KEY   = 'AIzaSyB9ZfLPhwr-KTx1xjPu0BF3wFAgweftoXM';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let favourites  = [];
+let currentQ    = 0;
+let answers     = {};
+let currentRestaurants = [];
+
+const questions = [
+  { id:"occasion", text:"What's <em>tonight</em> actually about?", options:[
+    {emoji:"💑",label:"Couple's night out",sub:"Just the two of us, making it count"},
+    {emoji:"🕯️",label:"A proper date night",sub:"Romantic, candlelit, impress them"},
+    {emoji:"👯",label:"Out with friends",sub:"Loud, fun, good for groups"},
+    {emoji:"🧘",label:"Solo reset",sub:"Quiet table, good book"},
+    {emoji:"💼",label:"Casual work dinner",sub:"Relaxed but presentable"}
+  ]},
+  { id:"vibe", text:"Pick the <em>feeling</em> you're after", options:[
+    {emoji:"🌿",label:"Earthy & wholesome",sub:"Wooden tables, natural light"},
+    {emoji:"✨",label:"Sleek & stylish",sub:"Great lighting, strong aesthetic"},
+    {emoji:"🏡",label:"Warm neighbourhood gem",sub:"Locals only kind of energy"},
+    {emoji:"🌍",label:"Global flavours",sub:"Indian, Middle Eastern, Asian fusion"}
+  ]},
+  { id:"neighbourhood", text:"Which part of <em>London</em> are you in?", options:[
+    {emoji:"🗺️",label:"East London",sub:"Shoreditch, Hackney, Bethnal Green"},
+    {emoji:"🏛️",label:"Central London",sub:"Soho, Covent Garden, Clerkenwell"},
+    {emoji:"🌳",label:"North London",sub:"Islington, Camden, Stoke Newington"},
+    {emoji:"🌉",label:"South London",sub:"Brixton, Peckham, Borough"}
+  ]},
+  { id:"hunger", text:"How <em>hungry</em> are you really?", options:[
+    {emoji:"🍽️",label:"Full sit-down meal",sub:"Starter, main, maybe dessert"},
+    {emoji:"🥙",label:"Something good but casual",sub:"Quick, satisfying, no fuss"},
+    {emoji:"🍷",label:"More drinks, some bites",sub:"Grazing & good conversation"},
+    {emoji:"🎂",label:"It's a celebration",sub:"Pull out all the stops"}
+  ]},
+  { id:"budget", text:"What's the <em>budget</em> looking like?", options:[
+    {emoji:"💚",label:"Under £20 a head",sub:"Street food energy"},
+    {emoji:"💛",label:"£20–40 a head",sub:"Solid restaurant, BYO maybe"},
+    {emoji:"🧡",label:"£40–70 a head",sub:"Proper evening out"},
+    {emoji:"❤️",label:"Whatever it takes",sub:"Money is no object tonight"}
+  ]}
+];
+
+const areaCoords = {
+  0:{lat:51.5234,lng:-0.0735,name:"East London"},
+  1:{lat:51.5130,lng:-0.1290,name:"Central London"},
+  2:{lat:51.5390,lng:-0.1027,name:"North London"},
+  3:{lat:51.4613,lng:-0.1156,name:"South London"}
+};
+
+const rankLabels = ["Top Pick","Hidden Gem","Local Favourite"];
+const vibes = [
+  ["Earthy and warm — every dish feels genuinely cared for.","Wholesome, nourishing, the kind of place regulars guard like a secret.","Natural and deeply satisfying in equal measure."],
+  ["Sleek and design-forward — great food in a beautiful space.","Style and substance in equal measure, with food that photographs as well as it tastes.","The kind of place that makes a strong first impression and delivers on it."],
+  ["A proper neighbourhood favourite with serious local loyalty.","Cosy and intimate — you'll feel like a regular from the first visit.","Unpretentious but exceptional. A genuine local gem."],
+  ["Bold global flavours that take you somewhere else entirely.","An adventure on a plate — exciting, vibrant, and deeply satisfying.","International inspiration done with real craft and care."]
+];
+
+const fallbackData = {
+  0:[
+    {place_id:"ml_e1",name:"Mao Chow",area:"Hackney",rating:"4.7",maps_url:"https://maps.google.com/?q=Mao+Chow+Hackney",price_level:1},
+    {place_id:"ml_e2",name:"Plates",area:"Shoreditch",rating:"4.6",maps_url:"https://maps.google.com/?q=Plates+London+E1",price_level:3},
+    {place_id:"ml_e3",name:"Farmacy",area:"Bethnal Green",rating:"4.8",maps_url:"https://maps.google.com/?q=Farmacy+London",price_level:2}
+  ],
+  1:[
+    {place_id:"ml_c1",name:"Mildreds",area:"Soho",rating:"4.7",maps_url:"https://maps.google.com/?q=Mildreds+Soho+London",price_level:2},
+    {place_id:"ml_c2",name:"The Gate",area:"Covent Garden",rating:"4.6",maps_url:"https://maps.google.com/?q=The+Gate+Covent+Garden",price_level:3},
+    {place_id:"ml_c3",name:"Vanilla Black",area:"Chancery Lane",rating:"4.8",maps_url:"https://maps.google.com/?q=Vanilla+Black+London",price_level:3}
+  ],
+  2:[
+    {place_id:"ml_n1",name:"Ottolenghi",area:"Islington",rating:"4.9",maps_url:"https://maps.google.com/?q=Ottolenghi+Islington",price_level:3},
+    {place_id:"ml_n2",name:"Stem & Glory",area:"Camden",rating:"4.6",maps_url:"https://maps.google.com/?q=Stem+Glory+Camden",price_level:2},
+    {place_id:"ml_n3",name:"Rasa",area:"Stoke Newington",rating:"4.7",maps_url:"https://maps.google.com/?q=Rasa+Stoke+Newington",price_level:2}
+  ],
+  3:[
+    {place_id:"ml_s1",name:"Ganapati",area:"Peckham",rating:"4.8",maps_url:"https://maps.google.com/?q=Ganapati+Peckham",price_level:2},
+    {place_id:"ml_s2",name:"Salon",area:"Brixton",rating:"4.8",maps_url:"https://maps.google.com/?q=Salon+Brixton+Village",price_level:3},
+    {place_id:"ml_s3",name:"Burnt Garlic",area:"Brixton Market",rating:"4.7",maps_url:"https://maps.google.com/?q=Burnt+Garlic+Brixton",price_level:1}
+  ]
+};
+
+// ── INIT ──
+async function init() {
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session) { currentUser = session.user; await loadFavourites(); showIntro(); }
+}
+
+// ── AUTH ──
+function switchTab(tab) {
+  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
+  document.getElementById('tabSignup').classList.toggle('active', tab==='signup');
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('signupForm').style.display = tab==='signup'?'block':'none';
+  document.getElementById('authError').textContent = '';
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const pass  = document.getElementById('loginPassword').value;
+  const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+  if (error) { document.getElementById('authError').textContent = error.message; return; }
+  currentUser = data.user;
+  await loadFavourites();
+  showToast('👋 Welcome back!');
+  showIntro();
+}
+
+async function handleSignup() {
+  const email = document.getElementById('signupEmail').value;
+  const pass  = document.getElementById('signupPassword').value;
+  const {data,error} = await sb.auth.signUp({email,password:pass});
+  if (error) { document.getElementById('authError').textContent = error.message; return; }
+  currentUser = data.user;
+  showToast('✅ Account created! Welcome to Sprout 🌿');
+  showIntro();
+}
+
+async function handleSignout() {
+  await sb.auth.signOut();
+  currentUser = null; favourites = [];
+  hideAllScreens();
+  document.getElementById('authScreen').classList.add('active');
+}
+
+function guestMode() { showIntro(); }
+
+function showIntro() {
+  hideAllScreens();
+  const el = document.getElementById('intro');
+  el.style.display = 'flex'; el.classList.remove('hide');
+  updateNav();
+}
+
+function hideAllScreens() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const intro = document.getElementById('intro');
+  intro.style.display = 'none';
+}
+
+// ── FAVOURITES ──
+async function loadFavourites() {
+  if (!currentUser) return;
+  const {data} = await sb.from('favourites').select('*').eq('user_id', currentUser.id);
+  favourites = data || [];
+}
+
+async function toggleFavourite(r) {
+  if (!currentUser) { showToast('Sign in to save favourites 💚'); return; }
+  const ex = favourites.find(f => f.place_id === r.place_id);
+  if (ex) {
+    await sb.from('favourites').delete().eq('id', ex.id);
+    favourites = favourites.filter(f => f.place_id !== r.place_id);
+    showToast('Removed from saved spots');
+  } else {
+    const {data} = await sb.from('favourites').insert({
+      user_id:currentUser.id, place_id:r.place_id,
+      name:r.name, area:r.area, rating:r.rating, maps_url:r.maps_url
+    }).select().single();
+    if (data) favourites.push(data);
+    showToast('❤️ Saved!');
+  }
+  refreshFavBtns();
+}
+
+function refreshFavBtns() {
+  document.querySelectorAll('.fav-btn').forEach(btn => {
+    const pid = btn.dataset.pid;
+    const saved = !!favourites.find(f => f.place_id === pid);
+    btn.classList.toggle('saved', saved);
+    btn.textContent = saved ? '❤️' : '🤍';
+  });
+}
+
+function openFavs() { renderFavsList(); document.getElementById('favsPanel').classList.add('active'); }
+function closeFavs() { document.getElementById('favsPanel').classList.remove('active'); }
+function closeFavsOutside(e) { if (e.target===document.getElementById('favsPanel')) closeFavs(); }
+
+function renderFavsList() {
+  const el = document.getElementById('favsList');
+  if (!currentUser) { el.innerHTML='<div class="favs-empty">Sign in to save your favourite spots 🌿</div>'; return; }
+  if (!favourites.length) { el.innerHTML='<div class="favs-empty">No saved spots yet.<br>Heart a restaurant to save it here!</div>'; return; }
+  el.innerHTML = favourites.map(f=>`
+    <div class="fav-item">
+      <div style="font-size:2rem">🌿</div>
+      <div class="fav-item-info">
+        <div class="fav-item-name">${f.name}</div>
+        <div class="fav-item-area">📍 ${f.area}${f.rating?' · ⭐ '+f.rating:''}</div>
+      </div>
+      <button class="fav-remove" onclick="removeFav('${f.place_id}')">✕</button>
+    </div>`).join('');
+}
+
+async function removeFav(pid) {
+  const fav = favourites.find(f=>f.place_id===pid);
+  if (!fav) return;
+  await sb.from('favourites').delete().eq('id', fav.id);
+  favourites = favourites.filter(f=>f.place_id!==pid);
+  renderFavsList(); refreshFavBtns();
+  showToast('Removed');
+}
+
+// ── QUIZ ──
+function startQuiz() {
+  const intro = document.getElementById('intro');
+  intro.classList.add('hide');
+  setTimeout(()=>{
+    intro.style.display='none';
+    document.getElementById('quiz').classList.add('active');
+    currentQ=0; answers={};
+    buildProgressDots(); showQuestion(0); updateNav();
+  }, 800);
+}
+
+function buildProgressDots() {
+  const wrap = document.getElementById('progressDots');
+  wrap.innerHTML = questions.map((_,i)=>`<div class="progress-dot${i===0?' active':''}" id="dot-${i}"></div>`).join('');
+}
+
+function updateDots(idx) {
+  questions.forEach((_,i)=>{
+    const d=document.getElementById(`dot-${i}`);
+    if(d) d.className='progress-dot'+(i<idx?' done':i===idx?' active':'');
+  });
+}
+
+function showQuestion(idx) {
+  const q = questions[idx];
+  document.getElementById('questionStage').innerHTML=`
+    <div class="q-card">
+      <div class="q-number">Question ${idx+1} of ${questions.length}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="options-grid">
+        ${q.options.map((o,i)=>`
+          <button class="option-btn" onclick="pick('${q.id}',${i},this)">
+            <span class="opt-emoji">${o.emoji}</span>
+            <span class="opt-label">${o.label}</span>
+            <span class="opt-sub">${o.sub}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function pick(qid, idx, btn) {
+  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers[qid]=idx;
+  setTimeout(()=>{
+    currentQ++;
+    if(currentQ<questions.length){updateDots(currentQ);showQuestion(currentQ);}
+    else startLoading();
+  },400);
+}
+
+// ── FETCH PLACES ──
+async function fetchPlaces() {
+  const area = areaCoords[answers.neighbourhood]||areaCoords[1];
+  const q    = `vegetarian restaurant ${area.name} London`;
+  const url  = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&key=${GOOGLE_KEY}`;
+  try {
+    const res  = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    const data = await res.json();
+    if (data.results?.length) {
+      return data.results.slice(0,3).map((p,i)=>({
+        place_id: p.place_id,
+        name: p.name,
+        area: p.formatted_address?.split(',')[1]?.trim()||area.name,
+        rating: p.rating?.toFixed(1)||'N/A',
+        maps_url: `https://www.google.com/maps/place/?q=place_id:${p.place_id}`,
+        photo_ref: p.photos?.[0]?.photo_reference||null,
+        price_level: p.price_level||2,
+        rank: rankLabels[i],
+        vibe: (vibes[answers.vibe]||vibes[0])[i]
+      }));
+    }
+  } catch(e){console.warn('Places fetch failed, using fallback');}
+  return (fallbackData[answers.neighbourhood]||fallbackData[1]).map((r,i)=>({
+    ...r, rank:rankLabels[i], photo_ref:null, vibe:(vibes[answers.vibe]||vibes[0])[i]
+  }));
+}
+
+function photoUrl(ref) {
+  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${ref}&key=${GOOGLE_KEY}`;
+}
+function priceLabel(n){ return ['','£','££','£££','££££'][n]||'££'; }
+
+// ── RESULTS ──
+function startLoading() {
+  document.getElementById('quiz').classList.remove('active');
+  document.getElementById('loading').classList.add('active');
+  const msgs=['Scanning London…','Checking the vibe…','Curating your picks…'];
+  let mi=0;
+  const iv=setInterval(()=>{document.getElementById('loadingText').textContent=msgs[++mi%msgs.length];},900);
+  fetchPlaces().then(rs=>{
+    clearInterval(iv);
+    currentRestaurants=rs;
+    setTimeout(()=>{document.getElementById('loading').classList.remove('active');showResults(rs);},400);
+  });
+}
+
+function showResults(rs) {
+  const labels=["a couple's night out","date night","a night out with friends","a solo evening","a work dinner"];
+  const area  = areaCoords[answers.neighbourhood]||areaCoords[1];
+  document.getElementById('resultsTitle').textContent=`Perfect for ${labels[answers.occasion]||'tonight'}.`;
+  document.getElementById('resultsSub').textContent=`3 spots we'd genuinely send you to in ${area.name}.`;
+
+  document.getElementById('restaurantsList').innerHTML = rs.map((r,i)=>{
+    const saved = !!favourites.find(f=>f.place_id===r.place_id);
+    const img   = r.photo_ref ? `<img src="${photoUrl(r.photo_ref)}" alt="${r.name}" loading="lazy" onerror="this.style.display='none'">` : '';
+    return `
+    <div class="restaurant-card">
+      <div class="card-image-wrap">
+        ${img}
+        ${!r.photo_ref?'<div class="card-placeholder">🌿</div>':''}
+        <div class="card-rank">${r.rank}</div>
+        ${r.rating!=='N/A'?`<div class="card-rating-badge">⭐ ${r.rating}</div>`:''}
+      </div>
+      <div class="card-body">
+        <div class="card-cuisine">Vegetarian · ${area.name}</div>
+        <div class="card-name">${r.name}</div>
+        <div class="card-area">📍 ${r.area}</div>
+        <div class="card-vibe">"${r.vibe}"</div>
+        <div class="card-footer">
+          <span class="card-price">${priceLabel(r.price_level)}</span>
+          <div class="card-actions">
+            <button class="fav-btn ${saved?'saved':''}" data-pid="${r.place_id}" onclick="toggleFavourite(currentRestaurants[${i}])">${saved?'❤️':'🤍'}</button>
+            <a class="maps-btn" href="${r.maps_url}" target="_blank" rel="noopener">View on Maps →</a>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('results').classList.add('active');
+  updateNav();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateNav() {
+  ['navUser','navUser2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=currentUser?currentUser.email?.split('@')[0]:'';
+  });
+  ['navSignout','navSignout2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=currentUser?'inline':'none';
+  });
+}
+
+function restart() {
+  currentQ=0; answers={};
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('quiz').classList.add('active');
+  buildProgressDots(); showQuestion(0);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>
