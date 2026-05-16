@@ -3,715 +3,1183 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sprout London — Vegetarian & Vegan Guide</title>
-<meta name="description" content="Discover vegetarian restaurants, food markets and dishes across London.">
-<meta property="og:title" content="Sprout London 🌿">
-<meta property="og:description" content="Find the best vegetarian spots, markets and dishes in London.">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Bitemap — London</title>
+<meta name="description" content="A curated guide to London's best restaurants, markets and food spots.">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
-  --cream: #F5F0E8; --dark: #0E0E0E; --green: #2D5A27; --green-light: #4A8C42;
-  --muted: #8A8A7A; --card-bg: #1A1A1A; --error: #e05c5c; --border: #222;
-  --surface: #141414;
+  /* Warm, rich palette */
+  --bg:       #F7F3EE;   /* warm parchment */
+  --bg2:      #EDE8E0;   /* slightly deeper parchment */
+  --bg3:      #E2DAD0;   /* card hover / section bg */
+  --surface:  #FFFFFF;   /* pure white cards */
+  --ink:      #1C1916;   /* near-black warm */
+  --ink2:     #4A4540;   /* medium warm grey */
+  --ink3:     #9C9590;   /* light warm grey */
+  --rule:     #DDD8D0;   /* divider lines */
+  --rule2:    #CBC5BC;   /* stronger rules */
+  --accent:   #C4572A;   /* terracotta — main accent */
+  --accent2:  #E07848;   /* lighter terracotta */
+  --accent-bg:#F5EAE4;   /* very pale terracotta bg */
+  --gold:     #8B6914;   /* dark gold for ratings */
+  --green:    #3A6B3A;   /* dietary green */
+  --blue:     #2255AA;   /* halal blue */
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans: 'Instrument Sans', system-ui, sans-serif;
 }
-body { font-family: 'DM Sans', sans-serif; background: var(--dark); color: var(--cream); min-height: 100vh; overflow-x: hidden; }
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
 .screen { display: none; min-height: 100vh; flex-direction: column; }
 .screen.active { display: flex; }
 
-/* ── NAV ── */
-.app-nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: rgba(14,14,14,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); gap: 1rem; }
-.nav-logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #a8d5a2, #4A8C42); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; cursor: pointer; flex-shrink: 0; }
-.nav-tabs { display: flex; gap: 0.3rem; }
-.nav-tab { background: transparent; border: none; color: var(--muted); padding: 0.45rem 0.9rem; border-radius: 50px; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
-.nav-tab:hover { color: var(--cream); }
-.nav-tab.active { background: #1e1e1e; color: var(--cream); border: 1px solid var(--border); }
-.nav-right { display: flex; align-items: center; gap: 0.7rem; flex-shrink: 0; }
-.nav-btn { background: transparent; border: 1.5px solid var(--border); color: var(--cream); padding: 0.45rem 1rem; border-radius: 50px; font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
-.nav-btn:hover { border-color: var(--green-light); }
-.nav-btn.primary { background: var(--green); border-color: var(--green); }
-.nav-btn.primary:hover { background: var(--green-light); }
-.nav-user { font-size: 0.8rem; color: var(--muted); }
-
 /* ── AUTH ── */
-#authScreen { align-items: center; justify-content: center; background: radial-gradient(ellipse 80% 60% at 50% 40%, #1e3d1a 0%, #0E0E0E 70%); }
-.auth-box { width: 100%; max-width: 420px; padding: 2rem; animation: fadeUp 0.6s ease both; }
-.auth-logo { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 700; background: linear-gradient(135deg, #a8d5a2 0%, #4A8C42 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; margin-bottom: 0.3rem; }
-.auth-tagline { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: #fff; color: #1a1a1a; border: none; padding: 0.9rem 1rem; border-radius: 10px; font-size: 0.95rem; font-weight: 500; cursor: pointer; margin-bottom: 1.2rem; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
-.google-btn:hover { background: #f0f0f0; transform: translateY(-1px); }
-.auth-divider-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
-.auth-divider-row span { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
-.auth-divider-row::before, .auth-divider-row::after { content:''; flex:1; height:1px; background:#2a2a2a; }
-.auth-tabs { display: flex; background: #1a1a1a; border-radius: 12px; padding: 4px; margin-bottom: 1.5rem; border: 1px solid #2a2a2a; }
-.auth-tab { flex: 1; padding: 0.7rem; text-align: center; border-radius: 9px; cursor: pointer; font-size: 0.88rem; font-weight: 500; transition: all 0.2s; color: var(--muted); border: none; background: transparent; font-family: 'DM Sans', sans-serif; }
-.auth-tab.active { background: var(--green); color: var(--cream); }
+#authScreen {
+  align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #2A1F14 0%, #1C1510 50%, #3A2818 100%);
+  position: relative; overflow: hidden;
+}
+#authScreen::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+.auth-wrap {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 380px;
+  padding: 3rem 2.5rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+}
+.auth-brand {
+  font-family: var(--serif);
+  font-size: 3rem; font-weight: 300;
+  letter-spacing: 0.1em; text-align: center;
+  margin-bottom: 0.25rem; color: #F7F3EE;
+}
+.auth-city {
+  text-align: center; font-size: 0.62rem;
+  letter-spacing: 0.35em; text-transform: uppercase;
+  color: rgba(247,243,238,0.4); margin-bottom: 2.5rem;
+}
+.google-btn {
+  width: 100%; display: flex; align-items: center;
+  justify-content: center; gap: 0.7rem;
+  background: rgba(255,255,255,0.92); color: #1C1916;
+  border: none; padding: 0.8rem 1rem;
+  font-family: var(--sans); font-size: 0.82rem; font-weight: 500;
+  cursor: pointer; transition: background 0.15s; margin-bottom: 1.5rem;
+}
+.google-btn:hover { background: #fff; }
+.auth-or {
+  display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;
+}
+.auth-or::before, .auth-or::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.1); }
+.auth-or span { font-size: 0.68rem; color: rgba(247,243,238,0.35); letter-spacing: 0.1em; }
+.auth-tabs {
+  display: flex; border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 1.5rem;
+}
+.auth-tab {
+  flex:1; padding: 0.55rem 0; text-align: center;
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: rgba(247,243,238,0.35); border: none; background: transparent;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; font-family: var(--sans); transition: all 0.15s;
+}
+.auth-tab.active { color: #F7F3EE; border-bottom-color: var(--accent2); }
 .auth-field { margin-bottom: 1rem; }
-.auth-field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; text-transform: uppercase; }
-.auth-field input { width: 100%; background: #1a1a1a; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; outline: none; }
-.auth-field input:focus { border-color: var(--green-light); }
-.auth-submit { width: 100%; background: var(--green); color: var(--cream); border: none; padding: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 500; cursor: pointer; margin-top: 0.5rem; transition: background 0.2s; font-family: 'DM Sans', sans-serif; }
-.auth-submit:hover { background: var(--green-light); }
-.auth-ghost { width: 100%; background: transparent; color: var(--muted); border: 1.5px solid #2a2a2a; padding: 0.9rem; border-radius: 10px; font-size: 0.9rem; cursor: pointer; margin-top: 1rem; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
-.auth-ghost:hover { border-color: var(--green-light); color: var(--cream); }
-.auth-error { color: var(--error); font-size: 0.82rem; margin-top: 0.8rem; text-align: center; min-height: 1.2rem; }
+.auth-field label {
+  display: block; font-size: 0.62rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: rgba(247,243,238,0.4); margin-bottom: 0.5rem;
+}
+.auth-field input {
+  width: 100%; background: transparent;
+  border: none; border-bottom: 1px solid rgba(255,255,255,0.15);
+  color: #F7F3EE; padding: 0.5rem 0;
+  font-family: var(--sans); font-size: 0.88rem;
+  outline: none; transition: border-color 0.15s;
+}
+.auth-field input:focus { border-bottom-color: var(--accent2); }
+.auth-field input::placeholder { color: rgba(247,243,238,0.25); }
+.auth-submit {
+  width: 100%; background: var(--accent); color: #F7F3EE;
+  border: none; padding: 0.85rem;
+  font-family: var(--sans); font-size: 0.72rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  cursor: pointer; margin-top: 0.5rem; transition: background 0.15s;
+}
+.auth-submit:hover { background: var(--accent2); }
+.auth-skip {
+  width: 100%; background: transparent;
+  border: none; color: rgba(247,243,238,0.35);
+  font-family: var(--sans); font-size: 0.72rem;
+  cursor: pointer; margin-top: 1.2rem;
+  text-decoration: underline; text-underline-offset: 3px;
+  letter-spacing: 0.04em;
+}
+.auth-skip:hover { color: rgba(247,243,238,0.7); }
+.auth-err { font-size: 0.75rem; color: #E07878; margin-top: 0.8rem; text-align: center; min-height: 1rem; }
+
+/* ── NAV ── */
+.app-nav {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(247,243,238,0.97);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--rule);
+}
+.nav-top {
+  display: flex; align-items: center;
+  padding: 0 2.5rem; height: 58px; gap: 2rem;
+}
+.nav-brand {
+  font-family: var(--serif); font-size: 1.7rem; font-weight: 300;
+  letter-spacing: 0.08em; color: var(--ink);
+  cursor: pointer; flex-shrink: 0; text-decoration: none;
+}
+.nav-brand span { color: var(--accent); }
+.nav-search-wrap { flex: 1; max-width: 480px; position: relative; }
+.nav-search-wrap input {
+  width: 100%; background: var(--bg2);
+  border: 1px solid var(--rule); border-radius: 6px;
+  padding: 0.5rem 3.5rem 0.5rem 1rem;
+  font-family: var(--sans); font-size: 0.82rem;
+  color: var(--ink); outline: none; transition: all 0.15s;
+}
+.nav-search-wrap input:focus { background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.nav-search-wrap input::placeholder { color: var(--ink3); }
+.nav-search-btn {
+  position: absolute; right: 0.6rem; top: 50%; transform: translateY(-50%);
+  background: var(--accent); border: none; color: #fff;
+  padding: 0.3rem 0.7rem; border-radius: 4px;
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--sans); cursor: pointer; transition: background 0.15s;
+}
+.nav-search-btn:hover { background: var(--accent2); }
+.nav-right { display: flex; align-items: center; gap: 1.2rem; margin-left: auto; flex-shrink: 0; }
+.nav-link {
+  font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3); cursor: pointer; background: none; border: none;
+  font-family: var(--sans); transition: color 0.15s; white-space: nowrap;
+}
+.nav-link:hover { color: var(--accent); }
+.nav-link.cta {
+  background: var(--accent); color: #fff;
+  padding: 0.45rem 1rem; border-radius: 4px; font-size: 0.65rem;
+}
+.nav-link.cta:hover { background: var(--accent2); color: #fff; }
+.nav-user { font-size: 0.7rem; color: var(--ink3); }
+
+/* Filter strip */
+.filter-strip {
+  display: flex; align-items: center;
+  padding: 0 2.5rem; gap: 0;
+  border-top: 1px solid var(--rule);
+  overflow-x: auto; scrollbar-width: none;
+  background: var(--bg2);
+}
+.filter-strip::-webkit-scrollbar { display: none; }
+.fchip {
+  font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3); background: none; border: none;
+  padding: 0.65rem 1rem; cursor: pointer;
+  font-family: var(--sans);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: all 0.15s;
+  flex-shrink: 0;
+}
+.fchip:hover { color: var(--ink); }
+.fchip.active { color: var(--accent); border-bottom-color: var(--accent); }
+.fsep { width: 1px; height: 12px; background: var(--rule2); flex-shrink: 0; margin: 0 0.3rem; }
+.fsel {
+  font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink3); background: none; border: none;
+  font-family: var(--sans); cursor: pointer; outline: none;
+  padding: 0.65rem 0.4rem; appearance: none; flex-shrink: 0;
+}
+.fsel:focus { color: var(--ink); }
 
 /* ── HOME ── */
-#homeScreen { background: var(--dark); }
-.home-hero { padding: 3rem 2rem 2.5rem; text-align: center; background: radial-gradient(ellipse 90% 70% at 50% 0%, #1a3318 0%, transparent 65%); }
-.home-hero-eyebrow { font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.8rem; }
-.home-hero-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 700; line-height: 1.15; margin-bottom: 0.8rem; }
-.home-hero-title em { font-style: italic; color: #a8d5a2; }
-.home-hero-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
+#homeScreen { background: var(--bg); }
 
-/* Search bar */
-.search-wrap { max-width: 680px; margin: 0 auto 1.5rem; padding: 0 1rem; }
-.search-bar { display: flex; align-items: center; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; transition: border-color 0.2s; }
-.search-bar:focus-within { border-color: var(--green-light); }
-.search-icon { padding: 0 1rem; color: var(--muted); font-size: 1.1rem; flex-shrink: 0; }
-.search-input { flex: 1; background: transparent; border: none; color: var(--cream); padding: 1rem 0; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; outline: none; }
-.search-input::placeholder { color: var(--muted); }
-.search-go { background: var(--green); color: var(--cream); border: none; padding: 0.7rem 1.4rem; margin: 0.4rem; border-radius: 10px; font-size: 0.88rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; white-space: nowrap; }
-.search-go:hover { background: var(--green-light); }
+/* Hero — rich dark */
+.hero {
+  background: linear-gradient(145deg, #2A1F14 0%, #1C1510 60%, #3A2818 100%);
+  padding: 5rem 2.5rem 4rem;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4rem; align-items: end;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-left { position: relative; z-index: 1; }
+.hero-kicker {
+  font-size: 0.62rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--accent2); margin-bottom: 1.5rem; opacity: 0.8;
+}
+.hero-title {
+  font-family: var(--serif); font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 300; line-height: 1; letter-spacing: -0.01em;
+  color: #F7F3EE; margin-bottom: 2.5rem;
+}
+.hero-title em { font-style: italic; color: var(--accent2); }
+.hero-search {
+  display: flex; align-items: center;
+  background: rgba(247,243,238,0.08);
+  border: 1px solid rgba(247,243,238,0.15);
+  border-radius: 8px; overflow: hidden;
+  transition: all 0.2s; max-width: 500px;
+}
+.hero-search:focus-within {
+  background: rgba(247,243,238,0.12);
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 3px rgba(196,87,42,0.2);
+}
+.hero-search input {
+  flex: 1; background: none; border: none;
+  color: #F7F3EE; padding: 1rem 1.2rem;
+  font-family: var(--sans); font-size: 0.9rem; outline: none;
+}
+.hero-search input::placeholder { color: rgba(247,243,238,0.35); }
+.hero-search-go {
+  background: var(--accent); border: none; color: #fff;
+  padding: 0.85rem 1.4rem; font-family: var(--sans);
+  font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: background 0.15s; flex-shrink: 0;
+}
+.hero-search-go:hover { background: var(--accent2); }
+.hero-right { position: relative; z-index: 1; }
+.hero-tags-label {
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(247,243,238,0.3); margin-bottom: 1.2rem;
+}
+.hero-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 3rem; }
+.htag {
+  font-family: var(--serif); font-style: italic;
+  font-size: 1.05rem; font-weight: 300;
+  color: rgba(247,243,238,0.55); background: none; border: none;
+  cursor: pointer; padding: 0; transition: color 0.15s;
+}
+.htag:hover { color: var(--accent2); }
+.htag::after { content: ' ·'; color: rgba(247,243,238,0.2); }
+.htag:last-child::after { display: none; }
+.hero-stats { display: flex; gap: 2.5rem; }
+.stat-n {
+  font-family: var(--serif); font-size: 2.2rem;
+  font-weight: 300; color: #F7F3EE; display: block; line-height: 1;
+}
+.stat-l {
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(247,243,238,0.3); display: block; margin-top: 0.3rem;
+}
 
-/* Filters */
-.filters-wrap { max-width: 780px; margin: 0 auto 0.5rem; padding: 0 1.5rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
-.filter-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-right: 0.3rem; }
-.filter-chip { background: var(--card-bg); border: 1.5px solid var(--border); color: var(--muted); padding: 0.4rem 0.9rem; border-radius: 50px; font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
-.filter-chip:hover { border-color: var(--green-light); color: var(--cream); }
-.filter-chip.active { background: #1e3d1a; border-color: var(--green-light); color: #a8d5a2; }
+/* AI strip */
+.ai-strip {
+  display: none; padding: 0.9rem 2.5rem;
+  background: var(--accent-bg);
+  border-bottom: 1px solid #DDD0C8;
+  align-items: baseline; gap: 1rem;
+}
+.ai-strip.show { display: flex; }
+.ai-strip-lbl {
+  font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); flex-shrink: 0;
+}
+.ai-strip-txt {
+  font-family: var(--serif); font-style: italic;
+  font-size: 0.95rem; font-weight: 300;
+  color: var(--ink2); line-height: 1.4;
+}
 
-/* Filter dropdowns */
-.filter-selects { max-width: 780px; margin: 0 auto 1.5rem; padding: 0 1.5rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
-.filter-select { background: var(--card-bg); border: 1.5px solid var(--border); color: var(--cream); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-family: 'DM Sans', sans-serif; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; padding-right: 1.8rem; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A8A7A'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.7rem center; }
-.filter-select:focus { border-color: var(--green-light); }
+/* Section header */
+.sec-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 2rem 2.5rem 1.2rem;
+}
+.sec-title {
+  font-family: var(--serif); font-size: 1.5rem; font-weight: 300;
+  letter-spacing: 0.02em; color: var(--ink);
+}
+.sec-count { font-size: 0.68rem; color: var(--ink3); letter-spacing: 0.06em; }
 
-/* Quiz shortcut */
-.quiz-shortcut { max-width: 780px; margin: 0 auto 2rem; padding: 0 1.5rem; }
-.quiz-shortcut-card { background: linear-gradient(135deg, #1a2e19 0%, #111 100%); border: 1px solid #2D5A27; border-radius: 14px; padding: 1.2rem 1.6rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; transition: all 0.2s; }
-.quiz-shortcut-card:hover { border-color: var(--green-light); transform: translateY(-2px); }
-.quiz-shortcut-text { font-size: 0.9rem; color: var(--cream); }
-.quiz-shortcut-text strong { display: block; font-size: 1rem; margin-bottom: 0.2rem; }
-.quiz-shortcut-text span { color: #a8d5a2; font-size: 0.82rem; }
-.quiz-shortcut-arrow { font-size: 1.4rem; color: var(--green-light); }
+/* Venue list */
+.venue-list { padding: 0 0 4rem; }
 
-/* Section headers */
-.section-header { max-width: 780px; margin: 0 auto 1rem; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; }
-.section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; }
-.section-count { font-size: 0.8rem; color: var(--muted); }
+.venue-row {
+  display: grid; grid-template-columns: 52px 1fr auto;
+  align-items: start; gap: 1.5rem;
+  padding: 1.4rem 2.5rem;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer; transition: background 0.12s;
+  animation: fadeIn 0.4s ease both;
+}
+.venue-row:hover { background: var(--bg2); }
+.venue-row:nth-child(odd) { background: var(--surface); }
+.venue-row:nth-child(odd):hover { background: var(--bg2); }
 
-/* Results grid */
-.results-grid { max-width: 780px; margin: 0 auto; padding: 0 1.5rem 4rem; display: flex; flex-direction: column; gap: 1.2rem; }
+.v-num {
+  font-family: var(--serif); font-size: 0.7rem;
+  color: var(--ink3); padding-top: 0.2rem;
+  font-weight: 300;
+}
+.v-main {}
+.v-name-row {
+  display: flex; align-items: baseline;
+  gap: 0.7rem; margin-bottom: 0.3rem; flex-wrap: wrap;
+}
+.v-name {
+  font-family: var(--serif); font-size: 1.25rem;
+  font-weight: 400; letter-spacing: 0.01em; line-height: 1.2;
+}
+.v-ctag {
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-bg);
+  padding: 0.15rem 0.5rem; border-radius: 2px;
+}
+.v-live {
+  font-size: 0.6rem; color: var(--ink3); display: flex;
+  align-items: center; gap: 0.3rem;
+}
+.live-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #C44; display: inline-block;
+}
+.v-diet { display: flex; gap: 0.35rem; }
+.dpill {
+  font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.12rem 0.45rem; border-radius: 2px;
+}
+.d-veg  { background: #EBF5EB; color: var(--green); }
+.d-vgn  { background: #E8F4E8; color: #2A5C2A; }
+.d-hal  { background: #EBF0F8; color: var(--blue); }
+.d-gf   { background: #F3EBF5; color: #6A3A7A; }
 
-/* Cards */
-.restaurant-card { background: var(--card-bg); border-radius: 18px; overflow: hidden; border: 1px solid var(--border); transition: transform 0.2s, border-color 0.2s; animation: fadeUp 0.5s ease both; }
-.restaurant-card:hover { transform: translateY(-3px); border-color: #2D5A27; }
-.card-image-wrap { height: 180px; position: relative; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
-.card-image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-.restaurant-card:hover .card-image-wrap img { transform: scale(1.04); }
-.card-placeholder { font-size: 3.5rem; }
-.card-badge { position: absolute; top: 0.8rem; left: 0.8rem; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25rem 0.7rem; border-radius: 50px; }
-.badge-green { background: var(--green); color: var(--cream); }
-.badge-orange { background: #8B4513; color: #ffd89b; }
-.badge-purple { background: #3d1a5a; color: #c8a8e0; }
-.card-rating-badge { position: absolute; top: 0.8rem; right: 0.8rem; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: var(--cream); font-size: 0.82rem; font-weight: 500; padding: 0.25rem 0.6rem; border-radius: 50px; }
-.card-body { padding: 1.2rem 1.4rem; }
-.card-type-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
-.card-type { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green-light); }
-.card-dot { color: var(--border); font-size: 0.5rem; }
-.card-area-small { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.05em; }
-.card-name { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
-.card-desc { font-size: 0.84rem; color: #b8b8a8; line-height: 1.55; margin-bottom: 1rem; font-style: italic; }
-.card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
-.tag { background: #1e1e1e; border: 1px solid #2a2a2a; color: #888; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 50px; }
-.card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 0.9rem; border-top: 1px solid #1e1e1e; }
-.card-meta { display: flex; align-items: center; gap: 0.8rem; }
-.card-price { font-size: 0.82rem; color: var(--muted); }
-.card-cost { font-size: 0.78rem; color: var(--muted); }
-.card-actions { display: flex; gap: 0.5rem; align-items: center; }
-.fav-btn { background: transparent; border: 1.5px solid #2a2a2a; width: 34px; height: 34px; border-radius: 50%; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-.fav-btn:hover { border-color: #e05c7a; }
-.fav-btn.saved { border-color: #e05c7a; background: rgba(224,92,122,0.1); }
-.maps-btn { background: var(--green); color: var(--cream); border: none; padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: background 0.2s; font-family: 'DM Sans', sans-serif; text-decoration: none; display: inline-flex; align-items: center; }
-.maps-btn:hover { background: var(--green-light); }
+.v-meta {
+  font-size: 0.72rem; color: var(--ink3);
+  display: flex; align-items: center; gap: 0.7rem;
+  flex-wrap: wrap; margin-bottom: 0.4rem;
+}
+.v-meta-sep { color: var(--rule2); }
+.v-desc {
+  font-family: var(--serif); font-style: italic;
+  font-size: 0.88rem; font-weight: 300;
+  color: var(--ink2); line-height: 1.55;
+  max-width: 580px; margin-bottom: 0.5rem;
+}
+.v-tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.vtag {
+  font-size: 0.58rem; letter-spacing: 0.06em;
+  color: var(--ink3); background: var(--bg3);
+  padding: 0.15rem 0.5rem; border-radius: 2px;
+}
 
-/* Empty state */
-.empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
-.empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
-.empty-state p { font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
-.empty-state-btn { background: var(--green); color: var(--cream); border: none; padding: 0.8rem 1.8rem; border-radius: 50px; font-size: 0.88rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.v-right {
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 0.6rem;
+  padding-top: 0.2rem; flex-shrink: 0;
+}
+.v-rating {
+  font-family: var(--serif); font-size: 1rem;
+  font-weight: 400; color: var(--gold);
+  display: flex; align-items: center; gap: 0.2rem;
+}
+.v-price { font-size: 0.7rem; color: var(--ink3); }
+.v-actions { display: flex; align-items: center; gap: 0.7rem; }
+.fav-btn {
+  background: none; border: none;
+  font-size: 0.9rem; cursor: pointer;
+  color: var(--ink3); transition: color 0.15s;
+}
+.fav-btn:hover { color: var(--accent); }
+.fav-btn.saved { color: var(--accent); }
+.view-link {
+  font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 1px; transition: opacity 0.15s;
+}
+.view-link:hover { opacity: 0.6; }
 
-/* ── ADD VENUE MODAL ── */
-#addVenueModal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 400; display: none; align-items: center; justify-content: center; padding: 1rem; }
-#addVenueModal.active { display: flex; }
-.modal-box { background: #111; border: 1px solid #2a2a2a; border-radius: 20px; padding: 2rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; animation: fadeUp 0.35s ease both; }
-.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-.modal-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; }
-.modal-close { background: transparent; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
-.modal-field { margin-bottom: 1rem; }
-.modal-field label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; text-transform: uppercase; }
-.modal-field input, .modal-field select, .modal-field textarea { width: 100%; background: #1a1a1a; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.8rem 1rem; border-radius: 10px; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; }
-.modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--green-light); }
-.modal-field textarea { resize: vertical; min-height: 80px; }
-.modal-field select { appearance: none; -webkit-appearance: none; }
-.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
-.modal-submit { width: 100%; background: var(--green); color: var(--cream); border: none; padding: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; margin-top: 0.5rem; }
-.modal-submit:hover { background: var(--green-light); }
-.modal-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.8rem; text-align: center; line-height: 1.5; }
+/* Empty */
+.empty-state { padding: 5rem 2.5rem; text-align: center; }
+.empty-title {
+  font-family: var(--serif); font-size: 1.8rem; font-weight: 300;
+  font-style: italic; color: var(--ink3); margin-bottom: 0.8rem;
+}
+.empty-sub { font-size: 0.78rem; color: var(--ink3); margin-bottom: 1.5rem; }
+.empty-cta {
+  font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--accent); color: #fff; border: none;
+  padding: 0.7rem 1.5rem; cursor: pointer; font-family: var(--sans);
+  border-radius: 4px;
+}
 
 /* ── QUIZ ── */
-#quizScreen { background: var(--dark); }
-.quiz-subheader { padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
-.progress-wrap { display: flex; gap: 6px; }
-.progress-dot { width: 28px; height: 4px; border-radius: 2px; background: #333; transition: background 0.4s; }
-.progress-dot.done { background: var(--green-light); }
-.progress-dot.active { background: var(--cream); }
-.question-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
-.q-card { width: 100%; max-width: 680px; animation: slideIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-.q-number { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green-light); margin-bottom: 1rem; }
-.q-text { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.25; margin-bottom: 2rem; font-weight: 700; }
-.q-text em { font-style: italic; color: #a8d5a2; }
-.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.options-grid .option-btn:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 50%; margin: 0 auto; }
-.option-btn { background: #1A1A1A; border: 1.5px solid #2A2A2A; color: var(--cream); padding: 1.1rem 1.2rem; border-radius: 14px; cursor: pointer; text-align: left; transition: all 0.2s; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; line-height: 1.4; }
-.option-btn .opt-emoji { font-size: 1.4rem; display: block; margin-bottom: 0.4rem; }
-.option-btn .opt-label { font-weight: 500; display: block; }
-.option-btn .opt-sub { font-size: 0.78rem; color: var(--muted); display: block; margin-top: 0.2rem; }
-.option-btn:hover { border-color: var(--green-light); background: #1a1a1a; transform: translateY(-2px); }
-.option-btn.selected { border-color: var(--green-light); background: #1e3d1a; }
-.skip-quiz-wrap { text-align: center; padding: 1.5rem 0 0; }
-.skip-quiz-btn { background: transparent; border: none; color: var(--muted); font-size: 0.85rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: underline; }
-.skip-quiz-btn:hover { color: var(--cream); }
+#quizScreen { background: var(--bg); }
+.quiz-sub {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 2.5rem; border-bottom: 1px solid var(--rule);
+  background: var(--bg2);
+}
+.quiz-sub-lbl { font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink3); }
+.pdots { display: flex; gap: 4px; }
+.pdot { width: 22px; height: 2px; background: var(--rule2); transition: background 0.3s; }
+.pdot.done { background: var(--accent); opacity: 0.4; }
+.pdot.active { background: var(--accent); }
+.q-stage {
+  flex: 1; display: flex; align-items: center;
+  justify-content: center; padding: 4rem 2.5rem;
+}
+.q-card { width: 100%; max-width: 560px; animation: fadeIn 0.4s ease both; }
+.q-num { font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink3); margin-bottom: 1.2rem; }
+.q-text {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 300; line-height: 1.15;
+  margin-bottom: 2.5rem; letter-spacing: -0.01em;
+}
+.q-text em { font-style: italic; color: var(--accent); }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+.opts .opt:last-child:nth-child(odd) { grid-column: 1/-1; max-width: 50%; }
+.opt {
+  background: var(--surface); border: 1px solid var(--rule);
+  padding: 1rem 1.2rem; cursor: pointer;
+  text-align: left; transition: all 0.15s;
+  font-family: var(--sans); border-radius: 6px;
+}
+.opt:hover { border-color: var(--accent); background: var(--accent-bg); }
+.opt.sel { border-color: var(--accent); background: var(--accent); color: #fff; }
+.opt-e { font-size: 1.2rem; display: block; margin-bottom: 0.4rem; }
+.opt-l { font-family: var(--serif); font-size: 1rem; font-weight: 400; display: block; }
+.opt-s { font-size: 0.7rem; color: var(--ink3); display: block; margin-top: 0.15rem; }
+.opt.sel .opt-s { color: rgba(255,255,255,0.65); }
+.skip-row { text-align: center; margin-top: 2rem; }
+.skip-btn {
+  font-size: 0.7rem; letter-spacing: 0.06em; color: var(--ink3);
+  background: none; border: none; cursor: pointer;
+  font-family: var(--sans); text-decoration: underline; text-underline-offset: 3px;
+}
+.skip-btn:hover { color: var(--ink); }
 
-/* ── LOADING ── */
-#loadingScreen { position: fixed; inset: 0; background: var(--dark); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
-#loadingScreen.active { display: flex; }
-.loading-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-style: italic; color: var(--cream); opacity: 0.8; animation: pulse 1.5s ease-in-out infinite; }
-.loading-dots { display: flex; gap: 8px; }
-.loading-dot { width: 8px; height: 8px; background: var(--green-light); border-radius: 50%; animation: bounce 1.2s ease-in-out infinite; }
-.loading-dot:nth-child(2) { animation-delay: 0.2s; }
-.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+/* ── MODALS ── */
+#addModal {
+  position: fixed; inset: 0;
+  background: rgba(28,25,22,0.7);
+  z-index: 400; display: none;
+  align-items: center; justify-content: center; padding: 1.5rem;
+}
+#addModal.active { display: flex; }
+.modal-box {
+  background: var(--surface); width: 100%; max-width: 480px;
+  max-height: 88vh; overflow-y: auto;
+  padding: 2.5rem; animation: fadeIn 0.25s ease both;
+  border-radius: 8px; border-top: 4px solid var(--accent);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+}
+.modal-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2rem; }
+.modal-title { font-family: var(--serif); font-size: 1.8rem; font-weight: 300; }
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3); font-family: var(--sans);
+}
+.mfield { margin-bottom: 1.2rem; }
+.mfield label {
+  display: block; font-size: 0.62rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--ink3); margin-bottom: 0.5rem;
+}
+.mfield input, .mfield select, .mfield textarea {
+  width: 100%; background: var(--bg);
+  border: none; border-bottom: 1px solid var(--rule2);
+  color: var(--ink); padding: 0.5rem 0;
+  font-family: var(--sans); font-size: 0.85rem;
+  outline: none; transition: border-color 0.15s;
+}
+.mfield input:focus, .mfield select:focus, .mfield textarea:focus { border-bottom-color: var(--accent); }
+.mfield textarea { resize: vertical; min-height: 60px; }
+.mrow { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.modal-submit {
+  width: 100%; background: var(--accent); color: #fff;
+  border: none; padding: 0.9rem; border-radius: 4px;
+  font-family: var(--sans); font-size: 0.7rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  cursor: pointer; margin-top: 0.5rem; transition: background 0.15s;
+}
+.modal-submit:hover { background: var(--accent2); }
+.modal-note { font-size: 0.7rem; color: var(--ink3); margin-top: 0.8rem; text-align: center; line-height: 1.6; }
 
-/* ── FAVS PANEL ── */
-#favsPanel { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; justify-content: flex-end; }
+/* Favs panel */
+#favsPanel {
+  position: fixed; inset: 0;
+  background: rgba(28,25,22,0.5);
+  z-index: 300; display: none; justify-content: flex-end;
+}
 #favsPanel.active { display: flex; }
-.favs-drawer { background: #111; width: 100%; max-width: 400px; height: 100vh; overflow-y: auto; padding: 2rem; animation: slideInRight 0.35s cubic-bezier(0.22,1,0.36,1) both; border-left: 1px solid #222; }
-.favs-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
-.favs-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; }
-.favs-close { background: transparent; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
-.fav-item { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid #1a1a1a; }
-.fav-item-info { flex: 1; }
-.fav-item-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.15rem; }
-.fav-item-area { font-size: 0.78rem; color: var(--muted); }
-.fav-remove { background: transparent; border: none; color: #444; cursor: pointer; font-size: 0.9rem; }
-.fav-remove:hover { color: var(--error); }
-.favs-empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-style: italic; line-height: 1.8; }
+.favs-drawer {
+  background: var(--surface); width: 100%; max-width: 360px;
+  height: 100vh; overflow-y: auto; padding: 2.5rem;
+  animation: slideIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  border-left: 1px solid var(--rule);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.08);
+}
+.favs-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 2rem; border-bottom: 1px solid var(--rule); padding-bottom: 1rem;
+}
+.favs-title { font-family: var(--serif); font-size: 1.5rem; font-weight: 300; }
+.favs-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3); font-family: var(--sans);
+}
+.fav-item {
+  display: flex; align-items: baseline; gap: 1rem;
+  padding: 0.9rem 0; border-bottom: 1px solid var(--rule);
+}
+.fav-n { font-family: var(--serif); font-size: 0.7rem; color: var(--ink3); flex-shrink: 0; }
+.fav-info { flex: 1; }
+.fav-name { font-family: var(--serif); font-size: 1rem; font-weight: 400; display: block; margin-bottom: 0.15rem; }
+.fav-area { font-size: 0.7rem; color: var(--ink3); }
+.fav-rm {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink3); font-family: var(--sans);
+}
+.fav-rm:hover { color: var(--accent); }
+.favs-empty {
+  font-family: var(--serif); font-style: italic;
+  font-size: 0.95rem; color: var(--ink3);
+  padding: 2rem 0; line-height: 1.7;
+}
 
-/* ── TOAST ── */
-.toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3d1a; color: var(--cream); padding: 0.75rem 1.5rem; border-radius: 50px; font-size: 0.85rem; z-index: 999; transition: transform 0.35s cubic-bezier(0.22,1,0.36,1); white-space: nowrap; border: 1px solid var(--green); }
+/* Loading */
+#loadScreen {
+  position: fixed; inset: 0;
+  background: linear-gradient(145deg, #2A1F14, #1C1510);
+  z-index: 200; display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+}
+#loadScreen.on { display: flex; }
+.load-brand {
+  font-family: var(--serif); font-size: 2.5rem;
+  font-weight: 300; letter-spacing: 0.12em;
+  color: #F7F3EE; animation: pulse 1.5s ease-in-out infinite;
+}
+.load-text { font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(247,243,238,0.35); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 2rem; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: var(--bg);
+  padding: 0.65rem 1.4rem; border-radius: 4px;
+  font-size: 0.72rem; letter-spacing: 0.06em;
+  z-index: 999; transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
 .toast.show { transform: translateX(-50%) translateY(0); }
 
-@keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
-@keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
-@keyframes slideInRight { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
-@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
-@keyframes bounce { 0%,100%{transform:translateY(0);opacity:.4} 50%{transform:translateY(-10px);opacity:1} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideIn { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+@keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+@media (max-width: 768px) {
+  .hero { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 1.5rem 2.5rem; }
+  .hero-right { display: none; }
+  .nav-top { padding: 0 1.2rem; gap: 1rem; }
+  .filter-strip { padding: 0 1rem; }
+  .venue-row { padding: 1.2rem 1.5rem; grid-template-columns: 36px 1fr auto; gap: 1rem; }
+  .sec-head { padding: 1.5rem; }
+  .modal-box { padding: 1.5rem; }
+  .favs-drawer { padding: 1.5rem; }
+  .q-stage { padding: 2.5rem 1.5rem; }
+  .nav-search-wrap { display: none; }
+}
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
-<div id="loadingScreen"><div class="loading-text" id="loadingText">Scanning London…</div><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>
+<div id="loadScreen">
+  <div class="load-brand">Bitemap</div>
+  <div class="load-text" id="loadTxt">Searching London…</div>
+</div>
 
-<!-- FAVS PANEL -->
-<div id="favsPanel" onclick="closeFavsOutside(event)">
+<!-- FAVS -->
+<div id="favsPanel" onclick="closeFavsOut(event)">
   <div class="favs-drawer">
-    <div class="favs-header"><div class="favs-title">❤️ Saved Spots</div><button class="favs-close" onclick="closeFavs()">✕</button></div>
+    <div class="favs-head">
+      <div class="favs-title">Saved spots</div>
+      <button class="favs-close" onclick="closeFavs()">Close</button>
+    </div>
     <div id="favsList"></div>
   </div>
 </div>
 
-<!-- ADD VENUE MODAL -->
-<div id="addVenueModal" onclick="closeModalOutside(event)">
+<!-- ADD VENUE -->
+<div id="addModal" onclick="closeAddOut(event)">
   <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">🌿 Add a Venue</div>
-      <button class="modal-close" onclick="closeAddVenue()">✕</button>
+    <div class="modal-head">
+      <div class="modal-title">Add a Venue</div>
+      <button class="modal-close" onclick="closeAdd()">Close</button>
     </div>
-    <div class="modal-field"><label>Venue name *</label><input type="text" id="venueName" placeholder="e.g. The Green Kitchen"></div>
-    <div class="modal-row">
-      <div class="modal-field"><label>Area / Neighbourhood *</label><input type="text" id="venueArea" placeholder="e.g. Hackney"></div>
-      <div class="modal-field"><label>Type *</label>
-        <select id="venueType">
-          <option value="restaurant">Restaurant</option>
-          <option value="cafe">Café</option>
-          <option value="market">Food Market</option>
-          <option value="popup">Pop-up</option>
-          <option value="takeaway">Takeaway</option>
-          <option value="bar">Bar / Pub</option>
-        </select>
+    <div class="mfield"><label>Name *</label><input type="text" id="vName" placeholder="e.g. The Palomar"></div>
+    <div class="mrow">
+      <div class="mfield"><label>Area *</label><input type="text" id="vArea" placeholder="e.g. Soho"></div>
+      <div class="mfield"><label>Type</label>
+        <select id="vType"><option value="restaurant">Restaurant</option><option value="cafe">Café</option><option value="market">Market</option><option value="bar">Bar</option><option value="takeaway">Takeaway</option></select>
       </div>
     </div>
-    <div class="modal-field"><label>Address</label><input type="text" id="venueAddress" placeholder="Full street address"></div>
-    <div class="modal-row">
-      <div class="modal-field"><label>Cuisine / Dishes</label><input type="text" id="venueCuisine" placeholder="e.g. Indian, wraps, dosas"></div>
-      <div class="modal-field"><label>Cost for 2 (approx)</label>
-        <select id="venueCost">
-          <option value="under20">Under £20</option>
-          <option value="20-40">£20–40</option>
-          <option value="40-70">£40–70</option>
-          <option value="70plus">£70+</option>
-        </select>
+    <div class="mfield"><label>Cuisine</label><input type="text" id="vCuisine" placeholder="e.g. Japanese, burgers…"></div>
+    <div class="mrow">
+      <div class="mfield"><label>Dietary options</label><input type="text" id="vDiet" placeholder="vegan, halal, gf…"></div>
+      <div class="mfield"><label>Cost for two</label>
+        <select id="vCost"><option value="under20">Under £20</option><option value="20-40">£20–40</option><option value="40-70">£40–70</option><option value="70plus">£70+</option></select>
       </div>
     </div>
-    <div class="modal-field"><label>Why is it special? (optional)</label><textarea id="venueDesc" placeholder="Tell people what makes this place worth visiting…"></textarea></div>
-    <div class="modal-field"><label>Google Maps link (optional)</label><input type="url" id="venueMaps" placeholder="https://maps.google.com/..."></div>
-    <div class="modal-field"><label>Your name or email (optional)</label><input type="text" id="venueSubmitter" placeholder="So we can credit you"></div>
-    <button class="modal-submit" onclick="submitVenue()">Submit venue →</button>
-    <div class="modal-note">We'll review submissions within 48 hours before publishing. Thank you for helping grow Sprout! 🌱</div>
+    <div class="mfield"><label>Why visit?</label><textarea id="vDesc" placeholder="What makes this place special…"></textarea></div>
+    <div class="mfield"><label>Google Maps link</label><input type="url" id="vMaps" placeholder="https://maps.google.com/…"></div>
+    <button class="modal-submit" onclick="submitVenue()">Submit for review</button>
+    <div class="modal-note">We review submissions within 48 hours.</div>
   </div>
 </div>
 
 <!-- AUTH -->
 <div id="authScreen" class="screen active">
-  <div class="auth-box">
-    <div class="auth-logo">Sprout</div>
-    <div class="auth-tagline">London · Vegetarian Guide</div>
-    <button class="google-btn" onclick="handleGoogleLogin()">
-      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+  <div class="auth-wrap">
+    <div class="auth-brand">Bitemap</div>
+    <div class="auth-city">London · Est. 2026</div>
+    <button class="google-btn" onclick="googleLogin()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
       Continue with Google
     </button>
-    <div class="auth-divider-row"><span>or use email</span></div>
+    <div class="auth-or"><span>or</span></div>
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign in</button>
-      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Create account</button>
+      <button class="auth-tab active" id="tL" onclick="swTab('l')">Sign in</button>
+      <button class="auth-tab" id="tS" onclick="swTab('s')">Create account</button>
     </div>
-    <div id="loginForm">
-      <div class="auth-field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
-      <div class="auth-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
-      <button class="auth-submit" onclick="handleLogin()">Sign in →</button>
+    <div id="lForm">
+      <div class="auth-field"><label>Email</label><input type="email" id="lE" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="lP" placeholder="••••••••"></div>
+      <button class="auth-submit" onclick="doLogin()">Sign in</button>
     </div>
-    <div id="signupForm" style="display:none">
-      <div class="auth-field"><label>Email</label><input type="email" id="signupEmail" placeholder="you@example.com"></div>
-      <div class="auth-field"><label>Password</label><input type="password" id="signupPassword" placeholder="At least 6 characters"></div>
-      <button class="auth-submit" onclick="handleSignup()">Create account →</button>
+    <div id="sForm" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="sE" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="sP" placeholder="At least 6 characters"></div>
+      <button class="auth-submit" onclick="doSignup()">Create account</button>
     </div>
-    <button class="auth-ghost" onclick="guestMode()">Browse without account</button>
-    <div class="auth-error" id="authError"></div>
+    <button class="auth-skip" onclick="guest()">Browse without an account</button>
+    <div class="auth-err" id="authErr"></div>
   </div>
 </div>
 
 <!-- HOME -->
 <div id="homeScreen" class="screen">
   <nav class="app-nav">
-    <div class="nav-logo" onclick="showHome()">Sprout</div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" id="tabAll" onclick="setTypeFilter('all',this)">All</button>
-      <button class="nav-tab" id="tabRestaurants" onclick="setTypeFilter('restaurant',this)">Restaurants</button>
-      <button class="nav-tab" id="tabMarkets" onclick="setTypeFilter('market',this)">Markets</button>
-      <button class="nav-tab" id="tabCafes" onclick="setTypeFilter('cafe',this)">Cafés</button>
+    <div class="nav-top">
+      <div class="nav-brand" onclick="showHome()">Bite<span>map</span></div>
+      <div class="nav-search-wrap">
+        <input id="navQ" placeholder="Search restaurants, dishes, areas…" onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="nav-search-btn" onclick="doSearch()">Go</button>
+      </div>
+      <div class="nav-right">
+        <button class="nav-link" onclick="goQuiz()">Not sure?</button>
+        <button class="nav-link" onclick="openAdd()">Add venue</button>
+        <button class="nav-link" onclick="openFavs()">Saved</button>
+        <span class="nav-user" id="navU"></span>
+        <button class="nav-link" id="navOut" onclick="doSignout()" style="display:none">Sign out</button>
+      </div>
     </div>
-    <div class="nav-right">
-      <button class="nav-btn" onclick="openAddVenue()">+ Add venue</button>
-      <button class="nav-btn" onclick="openFavs()">❤️ Saved</button>
-      <span class="nav-user" id="navUser"></span>
-      <button class="nav-btn" id="navSignout" onclick="handleSignout()" style="display:none">Sign out</button>
+    <div class="filter-strip">
+      <button class="fchip active" onclick="setType('all',this)">All</button>
+      <button class="fchip" onclick="setType('restaurant',this)">Restaurants</button>
+      <button class="fchip" onclick="setType('market',this)">Markets</button>
+      <button class="fchip" onclick="setType('cafe',this)">Cafés</button>
+      <button class="fchip" onclick="setType('bar',this)">Bars</button>
+      <div class="fsep"></div>
+      <button class="fchip active" onclick="setArea('all',this)">All London</button>
+      <button class="fchip" onclick="setArea('East London',this)">East</button>
+      <button class="fchip" onclick="setArea('Central London',this)">Central</button>
+      <button class="fchip" onclick="setArea('North London',this)">North</button>
+      <button class="fchip" onclick="setArea('South London',this)">South</button>
+      <button class="fchip" onclick="setArea('West London',this)">West</button>
+      <div class="fsep"></div>
+      <button class="fchip" onclick="toggleDiet('vegan',this)">Vegan</button>
+      <button class="fchip" onclick="toggleDiet('halal',this)">Halal</button>
+      <button class="fchip" onclick="toggleDiet('vegetarian',this)">Vegetarian</button>
+      <div class="fsep"></div>
+      <select class="fsel" id="ratingF" onchange="applyFilters()">
+        <option value="0">Any rating</option>
+        <option value="4">4.0+</option>
+        <option value="4.5">4.5+</option>
+        <option value="4.8">4.8+</option>
+      </select>
+      <select class="fsel" id="costF" onchange="applyFilters()">
+        <option value="all">Any price</option>
+        <option value="under20">Under £20</option>
+        <option value="20-40">£20–40</option>
+        <option value="40-70">£40–70</option>
+        <option value="70plus">£70+</option>
+      </select>
+      <select class="fsel" id="sortF" onchange="applyFilters()">
+        <option value="rating">Top rated</option>
+        <option value="name">A – Z</option>
+      </select>
     </div>
   </nav>
 
-  <div class="home-hero">
-    <div class="home-hero-eyebrow">London · Vegetarian & Vegan</div>
-    <h1 class="home-hero-title">Find your next <em>favourite</em> spot</h1>
-    <p class="home-hero-sub">Restaurants, markets, cafés and hidden gems — all in one place</p>
-
-    <div class="search-wrap">
-      <div class="search-bar">
-        <div class="search-icon">🔍</div>
-        <input class="search-input" id="searchInput" placeholder="Search by place, area, or dish (e.g. dosas, ramen, Borough…)" onkeydown="if(event.key==='Enter')doSearch()">
-        <button class="search-go" onclick="doSearch()">Search</button>
+  <!-- HERO — dark rich background -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-kicker">London · Every cuisine · Every diet</div>
+      <h1 class="hero-title">Discover your<br>next <em>great</em><br>meal</h1>
+      <div class="hero-search">
+        <input id="heroQ" placeholder="Ramen, halal burger, Sunday roast…" onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="hero-search-go" onclick="doSearch()">Search</button>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-tags-label">Popular searches</div>
+      <div class="hero-tags">
+        <button class="htag" onclick="qs('ramen')">Ramen</button>
+        <button class="htag" onclick="qs('pizza')">Pizza</button>
+        <button class="htag" onclick="qs('brunch')">Brunch</button>
+        <button class="htag" onclick="qs('sushi')">Sushi</button>
+        <button class="htag" onclick="qs('burger')">Burger</button>
+        <button class="htag" onclick="qs('tacos')">Tacos</button>
+        <button class="htag" onclick="qs('dim sum')">Dim sum</button>
+        <button class="htag" onclick="qs('curry')">Curry</button>
+        <button class="htag" onclick="qs('steak')">Steak</button>
+        <button class="htag" onclick="qs('natural wine')">Natural wine</button>
+        <button class="htag" onclick="qs('pasta')">Pasta</button>
+        <button class="htag" onclick="qs('market')">Markets</button>
+      </div>
+      <div class="hero-stats">
+        <div><span class="stat-n" id="statV">48</span><span class="stat-l">Venues</span></div>
+        <div><span class="stat-n">5</span><span class="stat-l">Areas</span></div>
+        <div><span class="stat-n">∞</span><span class="stat-l">Discoveries</span></div>
       </div>
     </div>
   </div>
 
-  <!-- FILTERS -->
-  <div class="filters-wrap">
-    <span class="filter-label">Area:</span>
-    <button class="filter-chip active" onclick="setAreaFilter('all',this)">All London</button>
-    <button class="filter-chip" onclick="setAreaFilter('East London',this)">East</button>
-    <button class="filter-chip" onclick="setAreaFilter('Central London',this)">Central</button>
-    <button class="filter-chip" onclick="setAreaFilter('North London',this)">North</button>
-    <button class="filter-chip" onclick="setAreaFilter('South London',this)">South</button>
-    <button class="filter-chip" onclick="setAreaFilter('West London',this)">West</button>
+  <div class="ai-strip" id="aiStrip">
+    <div class="ai-strip-lbl">Bitemap</div>
+    <div class="ai-strip-txt" id="aiTxt"></div>
   </div>
 
-  <div class="filter-selects">
-    <select class="filter-select" id="ratingFilter" onchange="applyFilters()">
-      <option value="0">Any rating</option>
-      <option value="4">4.0+ stars</option>
-      <option value="4.5">4.5+ stars</option>
-      <option value="4.8">4.8+ stars</option>
-    </select>
-    <select class="filter-select" id="costFilter" onchange="applyFilters()">
-      <option value="all">Any budget</option>
-      <option value="under20">Under £20 for 2</option>
-      <option value="20-40">£20–40 for 2</option>
-      <option value="40-70">£40–70 for 2</option>
-      <option value="70plus">£70+ for 2</option>
-    </select>
-    <select class="filter-select" id="sortFilter" onchange="applyFilters()">
-      <option value="rating">Sort: Top rated</option>
-      <option value="name">Sort: A–Z</option>
-    </select>
+  <div class="sec-head">
+    <div class="sec-title" id="secTitle">Featured spots</div>
+    <div class="sec-count" id="secCount"></div>
   </div>
 
-  <!-- QUIZ SHORTCUT -->
-  <div class="quiz-shortcut">
-    <div class="quiz-shortcut-card" onclick="goToQuiz()">
-      <div class="quiz-shortcut-text">
-        <strong>✨ Not sure where to go?</strong>
-        <span>Answer 5 quick questions and get a personalised recommendation →</span>
-      </div>
-      <div class="quiz-shortcut-arrow">→</div>
-    </div>
-  </div>
-
-  <div class="section-header">
-    <div class="section-title" id="sectionTitle">All venues</div>
-    <div class="section-count" id="sectionCount"></div>
-  </div>
-
-  <div class="results-grid" id="resultsGrid">
-    <div class="empty-state"><div class="empty-state-icon">🌿</div><p>Loading spots…</p></div>
-  </div>
+  <div class="venue-list" id="venueList"></div>
 </div>
 
 <!-- QUIZ -->
 <div id="quizScreen" class="screen">
   <nav class="app-nav">
-    <div class="nav-logo" onclick="showHome()">Sprout</div>
-    <div class="nav-right">
-      <button class="nav-btn" onclick="showHome()">← Back to search</button>
+    <div class="nav-top">
+      <div class="nav-brand" onclick="showHome()">Bite<span>map</span></div>
+      <div class="nav-right" style="margin-left:auto">
+        <button class="nav-link" onclick="showHome()">← Back</button>
+      </div>
     </div>
   </nav>
-  <div class="quiz-subheader">
-    <div style="font-size:0.8rem;color:var(--muted)">Personalised pick</div>
-    <div class="progress-wrap" id="progressDots"></div>
+  <div class="quiz-sub">
+    <div class="quiz-sub-lbl">Personalised recommendation</div>
+    <div class="pdots" id="pdots"></div>
   </div>
-  <div class="question-stage" id="questionStage"></div>
+  <div class="q-stage" id="qStage"></div>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://olmfwrlhloxkdrarlfmc.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_VihKP57OQc4ydpeXJEzUhA_xwK_QgWW';
-const GOOGLE_KEY   = 'AIzaSyB9ZfLPhwr-KTx1xjPu0BF3wFAgweftoXM';
-const APP_URL      = 'https://sprout-gamma.vercel.app';
+const SB_URL = 'https://olmfwrlhloxkdrarlfmc.supabase.co';
+const SB_KEY = 'sb_publishable_VihKP57OQc4ydpeXJEzUhA_xwK_QgWW';
+const GKEY   = 'AIzaSyB9ZfLPhwr-KTx1xjPu0BF3wFAgweftoXM';
+const APP    = 'https://sprout-gamma.vercel.app';
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SB_URL, SB_KEY);
+let user=null, favs=[], cQ=0, ans={};
+let typeF='all', areaF='all', diets=new Set(), activeQ='';
+window.VM = {};
 
-let currentUser = null;
-let favourites  = [];
-let allVenues   = [];
-let activeTypeFilter = 'all';
-let activeAreaFilter = 'all';
-let activeQuery = '';
-let currentQ = 0;
-let answers  = {};
+const venues = [
+  // Central London
+  {id:'r1',name:'Dishoom',area:'Central London',hood:'Covent Garden',type:'restaurant',cuisine:'Indian',diet:[],rating:4.8,pl:2,cost:'20-40',desc:'The beloved Bombay café. Queues worth it for the bacon naan and black dal alone.',tags:['Indian','Curry','Breakfast','Iconic','All day'],maps:'https://maps.google.com/?q=Dishoom+Covent+Garden'},
+  {id:'r2',name:'Padella',area:'Central London',hood:'Borough Market',type:'restaurant',cuisine:'Italian Pasta',diet:['vegetarian'],rating:4.9,pl:1,cost:'under20',desc:'Handmade pasta at prices that feel criminal. The pici cacio e pepe will rearrange your priorities.',tags:['Pasta','Italian','Queue','No bookings'],maps:'https://maps.google.com/?q=Padella+Borough+Market'},
+  {id:'r3',name:'Kiln',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Thai',diet:[],rating:4.8,pl:2,cost:'20-40',desc:'Wood-fired Thai at its very best. Sit at the counter and watch the chefs work.',tags:['Thai','Asian','Wood fire','Counter dining'],maps:'https://maps.google.com/?q=Kiln+Soho'},
+  {id:'r4',name:'Xu',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Taiwanese',diet:[],rating:4.7,pl:3,cost:'40-70',desc:'Art deco Taiwanese with scallion pancakes and beef noodle soup that demand return visits.',tags:['Taiwanese','Asian','Date night','Dim sum'],maps:'https://maps.google.com/?q=Xu+Restaurant+Soho'},
+  {id:'r5',name:'Gymkhana',area:'Central London',hood:'Mayfair',type:'restaurant',cuisine:'Indian',diet:[],rating:4.9,pl:4,cost:'70plus',desc:'The finest Indian dining in London. Game dishes and cocktails in a colonial club setting.',tags:['Indian','Curry','Michelin star','Fine dining'],maps:'https://maps.google.com/?q=Gymkhana+London'},
+  {id:'r6',name:'El Pastor',area:'Central London',hood:'Borough',type:'restaurant',cuisine:'Mexican',diet:[],rating:4.8,pl:2,cost:'20-40',desc:'Remarkable tacos al pastor under London Bridge arches. The mezcal list matches the food.',tags:['Tacos','Mexican','Mezcal','Arches'],maps:'https://maps.google.com/?q=El+Pastor+London'},
+  {id:'r7',name:'Smoking Goat',area:'Central London',hood:'Shoreditch',type:'restaurant',cuisine:'Thai BBQ',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Raucous, fun Thai BBQ. The smoked meats and natural wine list are both exceptional.',tags:['Thai','BBQ','Natural wine','Loud'],maps:'https://maps.google.com/?q=Smoking+Goat+London'},
+  {id:'r8',name:'Bao Borough',area:'Central London',hood:'Borough',type:'restaurant',cuisine:'Taiwanese',diet:['vegetarian'],rating:4.8,pl:2,cost:'20-40',desc:'Tiny, iconic, extraordinary. The bao are clouds of perfection. Queue fast, eat slowly.',tags:['Bao','Taiwanese','Asian','Small plates'],maps:'https://maps.google.com/?q=Bao+Borough'},
+  {id:'r9',name:'Brigadiers',area:'Central London',hood:'Bank',type:'restaurant',cuisine:'Indian BBQ',diet:[],rating:4.7,pl:3,cost:'40-70',desc:'Indian BBQ meets sports bar. Incredible kebabs and craft beer in a beautiful space.',tags:['Indian','BBQ','Kebab','Curry'],maps:'https://maps.google.com/?q=Brigadiers+London'},
+  {id:'r10',name:'Kanada-Ya',area:'Central London',hood:'Covent Garden',type:'restaurant',cuisine:'Japanese Ramen',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Tonkotsu ramen perfectionists. The 18-hour broth is rich, complex and deeply satisfying.',tags:['Ramen','Japanese','Tonkotsu','Noodles'],maps:'https://maps.google.com/?q=Kanada-Ya+London'},
+  {id:'r11',name:'Tonkotsu',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Japanese Ramen',diet:[],rating:4.6,pl:2,cost:'20-40',desc:'London's beloved ramen originals. The Soho spot is still the best of the bunch.',tags:['Ramen','Japanese','Tonkotsu','Noodles'],maps:'https://maps.google.com/?q=Tonkotsu+Soho'},
+  {id:'r12',name:'Flat Iron',area:'Central London',hood:'Covent Garden',type:'restaurant',cuisine:'Steak',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'The cult steak restaurant. One cut, done perfectly, at prices that seem impossible.',tags:['Steak','British','Covent Garden'],maps:'https://maps.google.com/?q=Flat+Iron+Covent+Garden'},
+  {id:'r13',name:'Hawksmoor',area:'Central London',hood:'Seven Dials',type:'restaurant',cuisine:'British Steak',diet:[],rating:4.8,pl:4,cost:'70plus',desc:'Britain's finest steakhouse. British beef, exceptional cocktails, beautiful rooms.',tags:['Steak','British','Cocktails','Special occasion'],maps:'https://maps.google.com/?q=Hawksmoor+Seven+Dials'},
+  {id:'r14',name:'Patty & Bun',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Burgers',diet:[],rating:4.6,pl:1,cost:'under20',desc:'London's most acclaimed burger. The Ari Gold with smoky mayo is a masterpiece.',tags:['Burger','American','Fast casual','Soho'],maps:'https://maps.google.com/?q=Patty+and+Bun+Soho'},
+  {id:'r15',name:'Bleecker Burger',area:'Central London',hood:'Bloomberg Arcade',type:'restaurant',cuisine:'Burgers',diet:[],rating:4.7,pl:1,cost:'under20',desc:'No-nonsense American-style smash burgers done with total conviction.',tags:['Burger','Smash burger','American'],maps:'https://maps.google.com/?q=Bleecker+Burger+Bloomberg'},
+  {id:'r16',name:'Pizza Pilgrims',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Neapolitan Pizza',diet:['vegetarian'],rating:4.6,pl:1,cost:'under20',desc:'Proper Neapolitan pizza from London's most passionate pizza missionaries.',tags:['Pizza','Neapolitan','Italian','Soho'],maps:'https://maps.google.com/?q=Pizza+Pilgrims+Soho'},
+  {id:'r17',name:'Sushi Tetsu',area:'Central London',hood:'Clerkenwell',type:'restaurant',cuisine:'Japanese Sushi',diet:[],rating:4.9,pl:4,cost:'70plus',desc:'One of London's finest sushi counters. Six seats, one chef, total perfection.',tags:['Sushi','Japanese','Omakase'],maps:'https://maps.google.com/?q=Sushi+Tetsu+London'},
+  {id:'r18',name:'Hoppers',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Sri Lankan',diet:['vegetarian'],rating:4.7,pl:2,cost:'20-40',desc:'Sri Lankan street food done brilliantly. The hoppers and karis are deeply addictive.',tags:['Sri Lankan','Indian','Curry','Hoppers'],maps:'https://maps.google.com/?q=Hoppers+London'},
+  {id:'r19',name:'Barrafina',area:'Central London',hood:'Covent Garden',type:'restaurant',cuisine:'Spanish Tapas',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'The finest Spanish tapas in London. No bookings, counter only, worth every minute of the queue.',tags:['Tapas','Spanish','Counter','Seafood'],maps:'https://maps.google.com/?q=Barrafina+Covent+Garden'},
+  // North London
+  {id:'r20',name:'Ottolenghi',area:'North London',hood:'Islington',type:'restaurant',cuisine:'Mediterranean',diet:['vegetarian','vegan'],rating:4.9,pl:3,cost:'40-70',desc:'Yotam's original. The salad counter alone justifies the trip. Vibrant, generous, essential.',tags:['Mediterranean','Salads','Brunch','Legendary'],maps:'https://maps.google.com/?q=Ottolenghi+Islington'},
+  {id:'r21',name:'Rasa',area:'North London',hood:'Stoke Newington',type:'restaurant',cuisine:'Keralan',diet:['vegetarian','vegan'],rating:4.7,pl:2,cost:'20-40',desc:'Legendary Keralan vegetarian cooking. The thali is a revelation. Bring your own wine.',tags:['Indian','Keralan','Curry','Thali','BYOB'],maps:'https://maps.google.com/?q=Rasa+Stoke+Newington'},
+  {id:'r22',name:'Stem & Glory',area:'North London',hood:'Camden',type:'restaurant',cuisine:'Vegan',diet:['vegan','vegetarian'],rating:4.6,pl:2,cost:'20-40',desc:'Plant-based cooking that wins over even committed carnivores. A Camden essential.',tags:['Vegan','Plant-based','Brunch','Camden'],maps:'https://maps.google.com/?q=Stem+Glory+Camden'},
+  {id:'r23',name:'Rotunda',area:'North London',hood:'Kings Cross',type:'restaurant',cuisine:'Modern European',diet:[],rating:4.6,pl:3,cost:'40-70',desc:'Stunning canal-side restaurant in King's Cross. The terrace in summer is unmissable.',tags:['Canal','Terrace','Modern European','Kings Cross'],maps:'https://maps.google.com/?q=Rotunda+Kings+Cross'},
+  // East London
+  {id:'r24',name:'Mao Chow',area:'East London',hood:'Hackney',type:'restaurant',cuisine:'Vegan Chinese',diet:['vegan','vegetarian'],rating:4.7,pl:1,cost:'under20',desc:'Vegan Chinese that genuinely slaps. Bold, punchy flavours with zero compromise.',tags:['Vegan','Chinese','Asian','Dumplings'],maps:'https://maps.google.com/?q=Mao+Chow+Hackney'},
+  {id:'r25',name:'Brat',area:'East London',hood:'Shoreditch',type:'restaurant',cuisine:'Basque',diet:[],rating:4.9,pl:4,cost:'70plus',desc:'Michelin-starred wood-fire cooking. The whole turbot is as good as dining gets.',tags:['Michelin star','Basque','Fire cooking','Special occasion'],maps:'https://maps.google.com/?q=Brat+Restaurant+London'},
+  {id:'r26',name:'Som Saa',area:'East London',hood:'Spitalfields',type:'restaurant',cuisine:'Thai',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Authentic Thai cooking with rare regional dishes. The som tam and larb are the real deal.',tags:['Thai','Asian','Larb','Spitalfields'],maps:'https://maps.google.com/?q=Som+Saa+London'},
+  {id:'r27',name:'Tacos Padre',area:'East London',hood:'Hackney',type:'restaurant',cuisine:'Mexican',diet:[],rating:4.6,pl:1,cost:'under20',desc:'Brilliant neighbourhood tacos. Fresh tortillas, proper fillings, mezcal on the side.',tags:['Tacos','Mexican','Hackney','Mezcal'],maps:'https://maps.google.com/?q=Tacos+Padre+Hackney'},
+  {id:'r28',name:'Leroy',area:'East London',hood:'Shoreditch',type:'bar',cuisine:'Wine Bar',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Outstanding natural wine bar with brilliant small plates. The wine list is a journey.',tags:['Natural wine','Small plates','Wine bar','Shoreditch'],maps:'https://maps.google.com/?q=Leroy+Restaurant+Shoreditch'},
+  {id:'r29',name:'E Pellicci',area:'East London',hood:'Bethnal Green',type:'cafe',cuisine:'Italian Caff',diet:[],rating:4.8,pl:1,cost:'under20',desc:'A London institution. Art Nouveau interior, full English breakfast, Italian warmth since 1900.',tags:['Breakfast','Full English','Iconic','Cash only'],maps:'https://maps.google.com/?q=E+Pellicci+Bethnal+Green'},
+  // South London
+  {id:'r30',name:'Ganapati',area:'South London',hood:'Peckham',type:'restaurant',cuisine:'South Indian',diet:['vegetarian','vegan'],rating:4.8,pl:2,cost:'20-40',desc:'Tiny, beloved Keralan cooking. The dosas are legendary. Book weeks ahead — it's worth it.',tags:['Indian','Dosas','Curry','BYOB'],maps:'https://maps.google.com/?q=Ganapati+Peckham'},
+  {id:'r31',name:'Salon',area:'South London',hood:'Brixton',type:'restaurant',cuisine:'Modern British',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'Intimate dining above Brixton Village. Seasonal tasting menu and extraordinary natural wine.',tags:['Tasting menu','Natural wine','British','Intimate'],maps:'https://maps.google.com/?q=Salon+Brixton'},
+  {id:'r32',name:'Peckham Bazaar',area:'South London',hood:'Peckham',type:'restaurant',cuisine:'Balkan',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Brilliant Balkan-inspired cooking in a railway arch. The lamb and yoghurt dishes shine.',tags:['Balkan','Lamb','Arch','BYOB'],maps:'https://maps.google.com/?q=Peckham+Bazaar'},
+  {id:'r33',name:'Kudu',area:'South London',hood:'Peckham',type:'restaurant',cuisine:'South African',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'South African-inspired modern cooking at its most exciting. Exceptional natural wine list.',tags:['South African','Peckham','Natural wine','Modern'],maps:'https://maps.google.com/?q=Kudu+Restaurant+Peckham'},
+  {id:'r34',name:'Burnt Garlic',area:'South London',hood:'Brixton',type:'restaurant',cuisine:'Sri Lankan',diet:['vegan','vegetarian'],rating:4.7,pl:1,cost:'under20',desc:'Outstanding Sri Lankan street food in Brixton Market. The rice and curry is unmissable.',tags:['Sri Lankan','Vegan','Street food','Brixton'],maps:'https://maps.google.com/?q=Burnt+Garlic+Brixton'},
+  // West London
+  {id:'r35',name:'Dinings SW3',area:'West London',hood:'Chelsea',type:'restaurant',cuisine:'Japanese',diet:[],rating:4.7,pl:4,cost:'70plus',desc:'Japanese-European fusion at its finest. The omakase menu is a beautiful journey.',tags:['Sushi','Japanese','Chelsea','Omakase'],maps:'https://maps.google.com/?q=Dinings+SW3'},
+  {id:'r36',name:'The River Café',area:'West London',hood:'Hammersmith',type:'restaurant',cuisine:'Italian',diet:[],rating:4.8,pl:4,cost:'70plus',desc:'The legendary riverside Italian. Birthplace of a generation of chefs. A London institution.',tags:['Italian','Pasta','Riverside','Legendary'],maps:'https://maps.google.com/?q=River+Cafe+London'},
+  // Markets
+  {id:'m1',name:'Borough Market',area:'Central London',hood:'London Bridge',type:'market',cuisine:'Food Market',diet:['vegetarian','vegan','halal'],rating:4.8,pl:1,cost:'under20',desc:'London's greatest food market. World-class produce, street food, artisan goods. Go hungry.',tags:['Market','Street food','Produce','Thu–Sat'],maps:'https://maps.google.com/?q=Borough+Market'},
+  {id:'m2',name:'Broadway Market',area:'East London',hood:'Hackney',type:'market',cuisine:'Street Food Market',diet:['vegetarian','vegan'],rating:4.7,pl:1,cost:'under20',desc:'Saturday market with brilliant street food, artisan bread and genuine community energy.',tags:['Market','Street food','Saturday','Hackney'],maps:'https://maps.google.com/?q=Broadway+Market+Hackney'},
+  {id:'m3',name:'Maltby Street Market',area:'South London',hood:'Bermondsey',type:'market',cuisine:'Artisan Market',diet:[],rating:4.6,pl:1,cost:'under20',desc:'The insider alternative to Borough. Smaller, more local, less crowded.',tags:['Market','Artisan','Weekend','Hidden gem'],maps:'https://maps.google.com/?q=Maltby+Street+Market'},
+  {id:'m4',name:'Brixton Village',area:'South London',hood:'Brixton',type:'market',cuisine:'Market & Restaurants',diet:['halal','vegan'],rating:4.7,pl:2,cost:'under20',desc:'Covered market packed with brilliant independents from every corner of the world.',tags:['Market','Covered','Diverse','Evenings'],maps:'https://maps.google.com/?q=Brixton+Village'},
+  {id:'m5',name:'Portobello Road',area:'West London',hood:'Notting Hill',type:'market',cuisine:'Street Market',diet:[],rating:4.5,pl:1,cost:'under20',desc:'Saturday institution. Antiques, food stalls, and Notting Hill energy in one long street.',tags:['Market','Saturday','Antiques','Notting Hill'],maps:'https://maps.google.com/?q=Portobello+Road+Market'},
+  {id:'m6',name:'Mercato Metropolitano',area:'South London',hood:'Elephant & Castle',type:'market',cuisine:'Food Hall',diet:['vegetarian','vegan','halal'],rating:4.6,pl:2,cost:'under20',desc:'Community food market with incredible diversity. Pizza, sushi, Korean, Ethiopian all under one roof.',tags:['Market','Food hall','Diverse','Pizza'],maps:'https://maps.google.com/?q=Mercato+Metropolitano+London'},
+  // Cafes
+  {id:'c1',name:'Monmouth Coffee',area:'Central London',hood:'Borough Market',type:'cafe',cuisine:'Specialty Coffee',diet:['vegetarian','vegan'],rating:4.8,pl:1,cost:'under20',desc:'London's most celebrated specialty coffee. Single origins, exceptional brewing, zero fuss.',tags:['Coffee','Brunch','Roastery','Borough'],maps:'https://maps.google.com/?q=Monmouth+Coffee+Borough'},
+  {id:'c2',name:'Climpson & Sons',area:'East London',hood:'Broadway Market',type:'cafe',cuisine:'Specialty Coffee',diet:['vegetarian','vegan'],rating:4.7,pl:1,cost:'under20',desc:'East London specialty coffee royalty. Roasted on-site, brewed with care every time.',tags:['Coffee','Brunch','Roastery','East London'],maps:'https://maps.google.com/?q=Climpson+Sons'},
+  {id:'c3',name:'Towpath Café',area:'East London',hood:'Hackney',type:'cafe',cuisine:'Café',diet:['vegetarian'],rating:4.8,pl:1,cost:'under20',desc:'A Regent's Canal institution. Seasonal food, great coffee, and the best setting in London.',tags:['Brunch','Canal','Coffee','Seasonal'],maps:'https://maps.google.com/?q=Towpath+Cafe+London'},
+  {id:'c4',name:'Pavilion Café',area:'East London',hood:'Victoria Park',type:'cafe',cuisine:'Café & Brunch',diet:['vegetarian','vegan'],rating:4.7,pl:1,cost:'under20',desc:'Lakeside café in Victoria Park. Weekend brunch queue is a London rite of passage.',tags:['Brunch','Park','Weekend','Coffee'],maps:'https://maps.google.com/?q=Pavilion+Cafe+Victoria+Park'},
+  // Bars
+  {id:'b1',name:'Lyaness',area:'Central London',hood:'Waterloo',type:'bar',cuisine:'Cocktail Bar',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'Ryan Chetiyawardana's extraordinary cocktail bar. Every drink is a conversation starter.',tags:['Cocktails','Award-winning','South Bank','Natural wine'],maps:'https://maps.google.com/?q=Lyaness+London'},
+  {id:'b2',name:'Nightjar',area:'East London',hood:'Shoreditch',type:'bar',cuisine:'Speakeasy Bar',diet:[],rating:4.7,pl:3,cost:'40-70',desc:'Prohibition-era speakeasy with extraordinary cocktails and live jazz every night.',tags:['Cocktails','Jazz','Speakeasy','Shoreditch'],maps:'https://maps.google.com/?q=Nightjar+London'},
+]
 
-// ── SEED DATA ──
-const seedVenues = [
-  // RESTAURANTS
-  {id:'r1',name:'Mildreds',area:'Central London',neighbourhood:'Soho',type:'restaurant',cuisine:'Global Vegetarian',rating:4.7,price_level:2,cost:'20-40',desc:'The OG London veggie institution. Buzzing, colourful, a menu that tours the world. No reservations — arrive ready.',tags:['No bookings','Cocktails','Vegan options'],maps_url:'https://maps.google.com/?q=Mildreds+Soho',photo:null},
-  {id:'r2',name:'Ottolenghi',area:'North London',neighbourhood:'Islington',type:'restaurant',cuisine:'Mediterranean',rating:4.9,price_level:3,cost:'40-70',desc:'Yotam\'s original. The counter of salads alone is worth the trip. Vibrant, generous, abundantly gorgeous food.',tags:['Legendary','Brunch','Take-home'],maps_url:'https://maps.google.com/?q=Ottolenghi+Islington',photo:null},
-  {id:'r3',name:'Ganapati',area:'South London',neighbourhood:'Peckham',type:'restaurant',cuisine:'South Indian',rating:4.8,price_level:2,cost:'20-40',desc:'Tiny, beloved, extraordinary South Indian cooking. The dosas are legendary. Book weeks ahead.',tags:['Book ahead','Dosas','BYOB'],maps_url:'https://maps.google.com/?q=Ganapati+Peckham',photo:null},
-  {id:'r4',name:'Mao Chow',area:'East London',neighbourhood:'Hackney',type:'restaurant',cuisine:'Vegan Chinese',rating:4.7,price_level:1,cost:'under20',desc:'Vegan Chinese that actually slaps. No compromises, no sad substitutes — just bold punchy flavours.',tags:['Budget-friendly','Dumplings','Vegan'],maps_url:'https://maps.google.com/?q=Mao+Chow+Hackney',photo:null},
-  {id:'r5',name:'Vanilla Black',area:'Central London',neighbourhood:'Chancery Lane',type:'restaurant',cuisine:'Modern Vegetarian',rating:4.8,price_level:3,cost:'40-70',desc:'Fine dining without the meat. Innovative seasonal tasting menus in a refined setting.',tags:['Fine dining','Tasting menu','Special occasion'],maps_url:'https://maps.google.com/?q=Vanilla+Black+London',photo:null},
-  {id:'r6',name:'Salon',area:'South London',neighbourhood:'Brixton',type:'restaurant',cuisine:'Modern British',rating:4.8,price_level:3,cost:'40-70',desc:'Intimate upstairs dining above Brixton Village. Seasonal tasting menu, natural wines. A real discovery.',tags:['Tasting menu','Natural wine','Intimate'],maps_url:'https://maps.google.com/?q=Salon+Brixton',photo:null},
-  {id:'r7',name:'The Gate',area:'Central London',neighbourhood:'Covent Garden',type:'restaurant',cuisine:'Fine Vegetarian',rating:4.6,price_level:3,cost:'40-70',desc:'Sophisticated without being stuffy. The kind of place you take someone to prove plant-based can be exceptional.',tags:['Romantic','Award-winning','Business dinner'],maps_url:'https://maps.google.com/?q=The+Gate+Covent+Garden',photo:null},
-  {id:'r8',name:'Rasa',area:'North London',neighbourhood:'Stoke Newington',type:'restaurant',cuisine:'Keralan',rating:4.7,price_level:2,cost:'20-40',desc:'Legendary Keralan cooking on the high street. The thali is a feast. Warm, family-run, deeply special.',tags:['Keralan','Thali','BYOB'],maps_url:'https://maps.google.com/?q=Rasa+Stoke+Newington',photo:null},
-  // CAFES
-  {id:'c1',name:'Redemption Bar',area:'West London',neighbourhood:'Notting Hill',type:'cafe',cuisine:'Vegan Café',rating:4.5,price_level:2,cost:'20-40',desc:'Alcohol-free, fully vegan café with amazing brunch and cocktails. No compromises on taste.',tags:['Brunch','Alcohol-free','Vegan'],maps_url:'https://maps.google.com/?q=Redemption+Bar+Notting+Hill',photo:null},
-  {id:'c2',name:'Wild Food Café',area:'Central London',neighbourhood:'Covent Garden',type:'cafe',cuisine:'Raw & Wholefood',rating:4.4,price_level:2,cost:'20-40',desc:'Raw, organic, and genuinely nourishing. The smoothie bowls are works of art.',tags:['Raw food','Organic','Smoothies'],maps_url:'https://maps.google.com/?q=Wild+Food+Cafe+Covent+Garden',photo:null},
-  // MARKETS
-  {id:'m1',name:'Borough Market',area:'Central London',neighbourhood:'London Bridge',type:'market',cuisine:'Food Market',rating:4.8,price_level:2,cost:'under20',desc:'London\'s greatest food market. Dozens of vegetarian and vegan stalls. Go hungry, leave euphoric.',tags:['Weekend','Street food','Produce'],maps_url:'https://maps.google.com/?q=Borough+Market+London',photo:null},
-  {id:'m2',name:'Broadway Market',area:'East London',neighbourhood:'Hackney',type:'market',cuisine:'Street Food Market',rating:4.7,price_level:1,cost:'under20',desc:'Saturday market with brilliant vegan street food, artisan bread and community energy.',tags:['Saturday only','Artisan','Community'],maps_url:'https://maps.google.com/?q=Broadway+Market+Hackney',photo:null},
-  {id:'m3',name:'Maltby Street Market',area:'South London',neighbourhood:'Bermondsey',type:'market',cuisine:'Artisan Market',rating:4.6,price_level:2,cost:'under20',desc:'The insider alternative to Borough. Smaller, more local, less crowded. Weekend mornings only.',tags:['Weekend','Hidden gem','Artisan'],maps_url:'https://maps.google.com/?q=Maltby+Street+Market',photo:null},
-  {id:'m4',name:'Brixton Village',area:'South London',neighbourhood:'Brixton',type:'market',cuisine:'Market & Restaurants',rating:4.7,price_level:2,cost:'under20',desc:'A covered market full of incredible independent restaurants. Vegan Sri Lankan, Ethiopian, more.',tags:['Covered market','Diverse','Evening'],maps_url:'https://maps.google.com/?q=Brixton+Village+Market',photo:null},
-  {id:'m5',name:'Portobello Road Market',area:'West London',neighbourhood:'Notting Hill',type:'market',cuisine:'Street Market',rating:4.5,price_level:1,cost:'under20',desc:'Famous street market with food stalls, antiques and great vegan snacks every Saturday.',tags:['Saturday','Antiques','Tourist favourite'],maps_url:'https://maps.google.com/?q=Portobello+Road+Market',photo:null},
-];
-
-const badgeMap = {restaurant:{label:'Restaurant',cls:'badge-green'},cafe:{label:'Café',cls:'badge-green'},market:{label:'Market 🛍️',cls:'badge-orange'},popup:{label:'Pop-up',cls:'badge-purple'},takeaway:{label:'Takeaway',cls:'badge-green'},bar:{label:'Bar',cls:'badge-purple'}};
-const costMap  = {'under20':'Under £20 for 2','20-40':'£20–40 for 2','40-70':'£40–70 for 2','70plus':'£70+ for 2'};
-const priceMap = ['','£','££','£££','££££'];
+const priceMap=['','£','££','£££','££££'];
+const costMap={'under20':'Under £20 for 2','20-40':'£20–40 for 2','40-70':'£40–70 for 2','70plus':'£70+ for 2'};
+const typeIcon={restaurant:'—',cafe:'—',market:'—',bar:'—'};
 
 // ── INIT ──
-async function init() {
+async function init(){
   const {data:{session}} = await sb.auth.getSession();
-  if (session) { currentUser = session.user; await loadFavourites(); }
-  allVenues = seedVenues;
-  showHome();
-  renderVenues(allVenues);
+  if(session){user=session.user;await loadFavs();}
+  document.getElementById('statVenues').textContent=venues.length;
+  showHome(); applyFilters();
 }
 
 // ── AUTH ──
-async function handleGoogleLogin() {
-  const {error} = await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:APP_URL}});
-  if (error) document.getElementById('authError').textContent = error.message;
+async function googleLogin(){ await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:APP}}); }
+function swTab(t){
+  document.getElementById('tL').classList.toggle('active',t==='l');
+  document.getElementById('tS').classList.toggle('active',t==='s');
+  document.getElementById('lForm').style.display=t==='l'?'block':'none';
+  document.getElementById('sForm').style.display=t==='s'?'block':'none';
 }
-function switchTab(t) {
-  document.getElementById('tabLogin').classList.toggle('active',t==='login');
-  document.getElementById('tabSignup').classList.toggle('active',t==='signup');
-  document.getElementById('loginForm').style.display=t==='login'?'block':'none';
-  document.getElementById('signupForm').style.display=t==='signup'?'block':'none';
+async function doLogin(){
+  const {data,error}=await sb.auth.signInWithPassword({email:document.getElementById('lE').value,password:document.getElementById('lP').value});
+  if(error){document.getElementById('authErr').textContent=error.message;return;}
+  user=data.user;await loadFavs();toast('Welcome back');showHome();
 }
-async function handleLogin() {
-  const {data,error}=await sb.auth.signInWithPassword({email:document.getElementById('loginEmail').value,password:document.getElementById('loginPassword').value});
-  if(error){document.getElementById('authError').textContent=error.message;return;}
-  currentUser=data.user; await loadFavourites(); showToast('👋 Welcome back!'); showHome();
+async function doSignup(){
+  const {data,error}=await sb.auth.signUp({email:document.getElementById('sE').value,password:document.getElementById('sP').value});
+  if(error){document.getElementById('authErr').textContent=error.message;return;}
+  user=data.user;toast('Welcome to Bitemap');showHome();
 }
-async function handleSignup() {
-  const {data,error}=await sb.auth.signUp({email:document.getElementById('signupEmail').value,password:document.getElementById('signupPassword').value});
-  if(error){document.getElementById('authError').textContent=error.message;return;}
-  currentUser=data.user; showToast('✅ Welcome to Sprout 🌿'); showHome();
-}
-async function handleSignout() {
-  await sb.auth.signOut(); currentUser=null; favourites=[];
-  hideAll(); document.getElementById('authScreen').classList.add('active');
-}
-function guestMode() { showHome(); }
+async function doSignout(){await sb.auth.signOut();user=null;favs=[];hideAll();document.getElementById('authScreen').classList.add('active');}
+function guest(){showHome();}
 
-// ── NAVIGATION ──
-function hideAll() { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); }
-function showHome() {
-  hideAll(); document.getElementById('homeScreen').classList.add('active');
-  updateNav(); applyFilters();
-}
-function goToQuiz() {
-  hideAll(); document.getElementById('quizScreen').classList.add('active');
-  currentQ=0; answers={}; buildProgressDots(); showQuestion(0);
-}
-function updateNav() {
-  document.getElementById('navUser').textContent = currentUser?currentUser.email?.split('@')[0]:'';
-  document.getElementById('navSignout').style.display = currentUser?'inline':'none';
+// ── NAV ──
+function hideAll(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));}
+function showHome(){hideAll();document.getElementById('homeScreen').classList.add('active');updateNav();}
+function goQuiz(){hideAll();document.getElementById('quizScreen').classList.add('active');cQ=0;ans={};buildDots();showQ(0);}
+function updateNav(){
+  document.getElementById('navU').textContent=user?user.email?.split('@')[0]:'';
+  document.getElementById('navOut').style.display=user?'inline':'none';
 }
 
-// ── SEARCH & FILTERS ──
-function doSearch() {
-  activeQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+// ── SEARCH ──
+function qs(q){document.getElementById('heroQ').value=q;document.getElementById('navQ').value=q;doSearch();}
+function doSearch(){
+  const raw=(document.getElementById('heroQ').value||document.getElementById('navQ').value).trim();
+  document.getElementById('heroQ').value=raw;
+  document.getElementById('navQ').value=raw;
+  if(!raw){activeQ='';hideAI();applyFilters();return;}
+  activeQ=raw.toLowerCase();
   applyFilters();
+  fetchLive(raw);
 }
-function setTypeFilter(type, btn) {
-  activeTypeFilter = type;
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  applyFilters();
-}
-function setAreaFilter(area, btn) {
-  activeAreaFilter = area;
-  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  applyFilters();
-}
-function applyFilters() {
-  const minRating = parseFloat(document.getElementById('ratingFilter')?.value||0);
-  const cost      = document.getElementById('costFilter')?.value||'all';
-  const sort      = document.getElementById('sortFilter')?.value||'rating';
 
-  let results = allVenues.filter(v => {
-    if (activeTypeFilter !== 'all' && v.type !== activeTypeFilter) return false;
-    if (activeAreaFilter !== 'all' && v.area !== activeAreaFilter) return false;
-    if (minRating > 0 && v.rating < minRating) return false;
-    if (cost !== 'all' && v.cost !== cost) return false;
-    if (activeQuery) {
-      const q = activeQuery;
-      const match = v.name.toLowerCase().includes(q) || v.area.toLowerCase().includes(q) ||
-        v.neighbourhood.toLowerCase().includes(q) || v.cuisine.toLowerCase().includes(q) ||
-        v.desc.toLowerCase().includes(q) || (v.tags||[]).some(t=>t.toLowerCase().includes(q));
-      if (!match) return false;
+async function fetchLive(raw){
+  const area=areaF!=='all'?areaF:'London';
+  showAI(`Searching for "${raw}" across ${area}…`,true);
+  try{
+    const url=`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(raw+' restaurant '+area)}&key=${GKEY}`;
+    const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    const d=await r.json();
+    if(d.results?.length){
+      const live=d.results.slice(0,8).map(p=>({
+        id:p.place_id,name:p.name,
+        area:area,hood:p.formatted_address?.split(',')[1]?.trim()||area,
+        type:'restaurant',cuisine:raw.charAt(0).toUpperCase()+raw.slice(1),
+        diet:[],rating:p.rating||null,pl:p.price_level||2,
+        cost:['under20','under20','20-40','40-70','70plus'][p.price_level||2],
+        desc:`A well-regarded ${area} spot for ${raw}.`,
+        tags:[raw,'Live'],maps:`https://www.google.com/maps/place/?q=place_id:${p.place_id}`,
+        isLive:true
+      }));
+      const local=venues.filter(v=>matches(v,activeQ));
+      const merged=[...live,...local.filter(l=>!live.find(lv=>lv.name===l.name))];
+      document.getElementById('secTitle').textContent=`Results for "${raw}"`;
+      document.getElementById('secCount').textContent=`${merged.length} spot${merged.length!==1?'s':''}`;
+      renderVenues(merged);
+      const rec=await getAIRec(raw,area,merged.slice(0,3).map(v=>v.name).join(', '));
+      if(rec)showAI(rec,false);else hideAI();
     }
+  }catch(e){hideAI();}
+}
+
+async function getAIRec(q,area,names){
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:60,
+        messages:[{role:'user',content:`You are Bitemap, a London food guide. Search: "${q}" in ${area}. Top spots: ${names}. One warm specific sentence (max 15 words) recommending what to try. No hashtags or em-dashes.`}]})
+    });
+    const d=await r.json();return d.content?.[0]?.text?.trim()||null;
+  }catch(e){return null;}
+}
+
+function showAI(txt,loading){
+  const strip=document.getElementById('aiStrip');
+  const el=document.getElementById('aiTxt');
+  el.style.fontStyle=loading?'normal':'italic';
+  el.style.color=loading?'var(--ink3)':'var(--ink2)';
+  el.textContent=txt;
+  strip.classList.add('show');
+}
+function hideAI(){document.getElementById('aiStrip').classList.remove('show');}
+
+// ── FILTERS ──
+function setType(t,btn){typeF=t;document.querySelectorAll('[onclick^="setType"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');hideAI();applyFilters();}
+function setArea(a,btn){areaF=a;document.querySelectorAll('[onclick^="setArea"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyFilters();}
+function toggleDiet(d,btn){if(diets.has(d)){diets.delete(d);btn.classList.remove('active');}else{diets.add(d);btn.classList.add('active');}applyFilters();}
+function matches(v,q){
+  if(!q)return true;
+  const fields=[v.name,v.area,v.hood,v.cuisine,v.desc,...(v.tags||[]),...(v.diet||[])];
+  if(fields.some(s=>s?.toLowerCase().includes(q)))return true;
+  // Broad keyword aliases
+  const aliases={
+    'ramen':['japanese','noodles','tonkotsu'],
+    'burger':['burgers','smash burger','american'],
+    'pizza':['neapolitan','italian pizza'],
+    'sushi':['japanese','omakase'],
+    'tacos':['mexican','tex-mex'],
+    'curry':['indian','keralan','sri lankan','bangladeshi'],
+    'brunch':['breakfast','cafe','all day'],
+    'steak':['steakhouse','british steak','flat iron'],
+    'dim sum':['chinese','taiwanese','asian','bao'],
+    'pasta':['italian','spaghetti'],
+    'cocktails':['bar','speakeasy','cocktail'],
+    'vegan':['plant-based','vegan chinese'],
+    'halal':['halal'],
+    'market':['food market','street market','food hall'],
+    'natural wine':['wine bar','natural wine'],
+  };
+  for(const[alias,related]of Object.entries(aliases)){
+    if(q.includes(alias)||alias.includes(q)){
+      if(related.some(r=>fields.some(s=>s?.toLowerCase().includes(r))))return true;
+    }
+  }
+  return false;
+}
+function applyFilters(){
+  const minR=parseFloat(document.getElementById('ratingF')?.value||0);
+  const cost=document.getElementById('costF')?.value||'all';
+  const sort=document.getElementById('sortF')?.value||'rating';
+  let res=venues.filter(v=>{
+    if(typeF!=='all'&&v.type!==typeF)return false;
+    if(areaF!=='all'&&v.area!==areaF)return false;
+    if(minR>0&&(v.rating||0)<minR)return false;
+    if(cost!=='all'&&v.cost!==cost)return false;
+    if(diets.size>0&&![...diets].every(d=>(v.diet||[]).includes(d)))return false;
+    if(activeQ&&!matches(v,activeQ))return false;
     return true;
   });
-
-  if (sort === 'rating') results.sort((a,b)=>b.rating-a.rating);
-  else results.sort((a,b)=>a.name.localeCompare(b.name));
-
-  const title = activeQuery ? `Results for "${activeQuery}"` : activeTypeFilter==='market'?'Food Markets':activeTypeFilter==='cafe'?'Cafés':activeTypeFilter==='restaurant'?'Restaurants':'All venues';
-  document.getElementById('sectionTitle').textContent = title;
-  document.getElementById('sectionCount').textContent = `${results.length} spot${results.length!==1?'s':''}`;
-
-  renderVenues(results);
+  if(sort==='rating')res.sort((a,b)=>(b.rating||0)-(a.rating||0));
+  else res.sort((a,b)=>a.name.localeCompare(b.name));
+  const title=activeQ?`Results for "${activeQ}"`:typeF==='market'?'Markets':typeF==='cafe'?'Cafés':typeF==='bar'?'Bars':typeF==='restaurant'?'Restaurants':'Featured';
+  document.getElementById('secTitle').textContent=title;
+  document.getElementById('secCount').textContent=`${res.length} spot${res.length!==1?'s':''}`;
+  renderVenues(res);
 }
 
 // ── RENDER ──
-function renderVenues(venues) {
-  const grid = document.getElementById('resultsGrid');
-  if (!venues.length) {
-    grid.innerHTML=`<div class="empty-state">
-      <div class="empty-state-icon">🔍</div>
-      <p>No spots found matching your search.<br>Know a great place we're missing?</p>
-      <button class="empty-state-btn" onclick="openAddVenue()">+ Add a venue</button>
-    </div>`;
+function renderVenues(list){
+  window.VM={};
+  list.forEach(v=>window.VM[v.id]=v);
+  const el=document.getElementById('venueList');
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-title">Nothing found</div><div class="empty-sub">Try a different search, or add a venue we're missing.</div><button class="empty-cta" onclick="openAdd()">Add a venue</button></div>`;
     return;
   }
-  grid.innerHTML = venues.map((v,i)=>{
-    const saved=!!favourites.find(f=>f.place_id===v.id);
-    const badge=badgeMap[v.type]||badgeMap.restaurant;
+  el.innerHTML=list.map((v,i)=>{
+    const saved=!!favs.find(f=>f.place_id===v.id);
+    const dietBadges=(v.diet||[]).map(d=>{
+      const cls={vegan:'diet-vegan',vegetarian:'diet-veg',halal:'diet-halal',glutenfree:'diet-gf'}[d]||'diet-veg';
+      const lbl={vegan:'Vegan',vegetarian:'Vegetarian',halal:'Halal',glutenfree:'GF'}[d]||d;
+      return `<span class="diet-pill ${cls}">${lbl}</span>`;
+    }).join('');
     return `
-    <div class="restaurant-card" style="animation-delay:${i*0.06}s">
-      <div class="card-image-wrap">
-        ${v.photo?`<img src="${v.photo}" alt="${v.name}" loading="lazy" onerror="this.style.display='none'">`:
-          `<div class="card-placeholder">${v.type==='market'?'🛍️':v.type==='cafe'?'☕':'🌿'}</div>`}
-        <div class="card-badge ${badge.cls}">${badge.label}</div>
-        ${v.rating?`<div class="card-rating-badge">⭐ ${v.rating}</div>`:''}
-      </div>
-      <div class="card-body">
-        <div class="card-type-row">
-          <span class="card-type">${v.cuisine}</span>
-          <span class="card-dot">●</span>
-          <span class="card-area-small">📍 ${v.neighbourhood}</span>
+    <div class="venue-row" style="animation-delay:${Math.min(i*0.04,0.35)}s" onclick="window.open('${v.maps}','_blank')">
+      <div class="v-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="v-main">
+        <div class="v-name-row">
+          <span class="v-name">${v.name}</span>
+          <span class="v-ctag">${v.cuisine}</span>
+          ${v.isLive?'<span style="font-size:0.62rem;color:#9A9893"><span class="live-dot"></span>Live</span>':''}
+          <div class="v-diet">${dietBadges}</div>
         </div>
-        <div class="card-name">${v.name}</div>
-        <div class="card-desc">"${v.desc}"</div>
-        <div class="card-tags">${(v.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
-        <div class="card-footer">
-          <div class="card-meta">
-            <span class="card-price">${priceMap[v.price_level]||'££'}</span>
-            ${v.cost?`<span class="card-cost">· ${costMap[v.cost]||''}</span>`:''}
-          </div>
-          <div class="card-actions">
-            <button class="fav-btn ${saved?'saved':''}" data-pid="${v.id}" onclick="toggleFav(allVenues.find(x=>x.id==='${v.id}'))">${saved?'❤️':'🤍'}</button>
-            <a class="maps-btn" href="${v.maps_url}" target="_blank" rel="noopener">View →</a>
-          </div>
+        <div class="v-meta">
+          <span>📍 ${v.hood}</span>
+          ${v.rating?`<span class="v-meta-sep">·</span><span>★ ${v.rating}</span>`:''}
+          <span class="v-meta-sep">·</span>
+          <span>${v.type}</span>
+          ${v.cost?`<span class="v-meta-sep">·</span><span>${costMap[v.cost]||''}</span>`:''}
+        </div>
+        <div class="v-desc">${v.desc}</div>
+        <div class="v-tags">${(v.tags||[]).map(t=>`<span class="vtag">${t}</span>`).join('')}</div>
+      </div>
+      <div class="v-right" onclick="event.stopPropagation()">
+        ${v.rating?`<div class="v-rating">★ ${v.rating}</div>`:''}
+        <div class="v-price">${priceMap[v.pl]||'££'}</div>
+        <div class="v-actions">
+          <button class="fav-btn ${saved?'saved':''}" data-id="${v.id}" onclick="toggleFav(window.VM['${v.id}'])">${saved?'♥':'♡'}</button>
+          <a class="view-link" href="${v.maps}" target="_blank" rel="noopener">Maps</a>
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ── FAVOURITES ──
-async function loadFavourites() {
-  if (!currentUser) return;
-  const {data}=await sb.from('favourites').select('*').eq('user_id',currentUser.id);
-  favourites=data||[];
-}
-async function toggleFav(v) {
-  if (!v) return;
-  if (!currentUser) { showToast('Sign in to save favourites 💚'); return; }
-  const ex=favourites.find(f=>f.place_id===v.id);
-  if (ex) {
+// ── FAVS ──
+async function loadFavs(){if(!user)return;const{data}=await sb.from('favourites').select('*').eq('user_id',user.id);favs=data||[];}
+async function toggleFav(v){
+  if(!v)return;
+  if(!user){toast('Sign in to save favourites');return;}
+  const ex=favs.find(f=>f.place_id===v.id);
+  if(ex){
     await sb.from('favourites').delete().eq('id',ex.id);
-    favourites=favourites.filter(f=>f.place_id!==v.id);
-    showToast('Removed');
-  } else {
-    const {data}=await sb.from('favourites').insert({user_id:currentUser.id,place_id:v.id,name:v.name,area:v.neighbourhood,rating:v.rating?.toString(),maps_url:v.maps_url}).select().single();
-    if(data) favourites.push(data);
-    showToast('❤️ Saved!');
+    favs=favs.filter(f=>f.place_id!==v.id);toast('Removed');
+  }else{
+    const{data}=await sb.from('favourites').insert({user_id:user.id,place_id:v.id,name:v.name,area:v.hood,rating:v.rating?.toString(),maps_url:v.maps}).select().single();
+    if(data)favs.push(data);toast('Saved');
   }
-  document.querySelectorAll('.fav-btn').forEach(btn=>{
-    const pid=btn.dataset.pid;
-    const s=!!favourites.find(f=>f.place_id===pid);
-    btn.classList.toggle('saved',s); btn.textContent=s?'❤️':'🤍';
-  });
+  document.querySelectorAll('.fav-btn').forEach(b=>{const s=!!favs.find(f=>f.place_id===b.dataset.id);b.classList.toggle('saved',s);b.textContent=s?'♥':'♡';});
 }
 function openFavs(){renderFavsList();document.getElementById('favsPanel').classList.add('active');}
 function closeFavs(){document.getElementById('favsPanel').classList.remove('active');}
-function closeFavsOutside(e){if(e.target===document.getElementById('favsPanel'))closeFavs();}
+function closeFavsOut(e){if(e.target===document.getElementById('favsPanel'))closeFavs();}
 function renderFavsList(){
   const el=document.getElementById('favsList');
-  if(!currentUser){el.innerHTML='<div class="favs-empty">Sign in to save your favourite spots 🌿</div>';return;}
-  if(!favourites.length){el.innerHTML='<div class="favs-empty">No saved spots yet.<br>Heart a venue to save it!</div>';return;}
-  el.innerHTML=favourites.map(f=>`
+  if(!user){el.innerHTML='<div class="favs-empty">Sign in to save your favourite spots.</div>';return;}
+  if(!favs.length){el.innerHTML='<div class="favs-empty">Nothing saved yet. Heart a venue to add it here.</div>';return;}
+  el.innerHTML=favs.map((f,i)=>`
     <div class="fav-item">
-      <div style="font-size:1.8rem">🌿</div>
-      <div class="fav-item-info"><div class="fav-item-name">${f.name}</div><div class="fav-item-area">📍 ${f.area}${f.rating?' · ⭐ '+f.rating:''}</div></div>
-      <button class="fav-remove" onclick="removeFav('${f.place_id}')">✕</button>
+      <div class="fav-n">${String(i+1).padStart(2,'0')}</div>
+      <div class="fav-info"><span class="fav-name">${f.name}</span><span class="fav-area">${f.area}${f.rating?' · ★ '+f.rating:''}</span></div>
+      <button class="fav-rm" onclick="rmFav('${f.place_id}')">Remove</button>
     </div>`).join('');
 }
-async function removeFav(pid){
-  const fav=favourites.find(f=>f.place_id===pid);
-  if(!fav)return;
-  await sb.from('favourites').delete().eq('id',fav.id);
-  favourites=favourites.filter(f=>f.place_id!==pid);
-  renderFavsList();
-  document.querySelectorAll('.fav-btn').forEach(btn=>{if(btn.dataset.pid===pid){btn.classList.remove('saved');btn.textContent='🤍';}});
-  showToast('Removed');
+async function rmFav(pid){
+  const f=favs.find(f=>f.place_id===pid);if(!f)return;
+  await sb.from('favourites').delete().eq('id',f.id);
+  favs=favs.filter(x=>x.place_id!==pid);renderFavsList();
+  document.querySelectorAll('.fav-btn').forEach(b=>{if(b.dataset.id===pid){b.classList.remove('saved');b.textContent='♡';}});
+  toast('Removed');
 }
 
 // ── ADD VENUE ──
-function openAddVenue(){document.getElementById('addVenueModal').classList.add('active');}
-function closeAddVenue(){document.getElementById('addVenueModal').classList.remove('active');}
-function closeModalOutside(e){if(e.target===document.getElementById('addVenueModal'))closeAddVenue();}
+function openAdd(){document.getElementById('addModal').classList.add('active');}
+function closeAdd(){document.getElementById('addModal').classList.remove('active');}
+function closeAddOut(e){if(e.target===document.getElementById('addModal'))closeAdd();}
 async function submitVenue(){
-  const name=document.getElementById('venueName').value.trim();
-  const area=document.getElementById('venueArea').value.trim();
-  if(!name||!area){showToast('Please fill in at least name and area');return;}
-  const venue={
-    name, area, type:document.getElementById('venueType').value,
-    address:document.getElementById('venueAddress').value,
-    cuisine:document.getElementById('venueCuisine').value,
-    cost:document.getElementById('venueCost').value,
-    desc:document.getElementById('venueDesc').value,
-    maps_url:document.getElementById('venueMaps').value,
-    submitter:document.getElementById('venueSubmitter').value,
-    status:'pending', submitted_at: new Date().toISOString()
-  };
-  try {
-    await sb.from('venue_submissions').insert(venue);
-  } catch(e){ console.log('Submissions table not set up yet — logged locally'); }
-  closeAddVenue();
-  showToast('🌱 Thanks! We\'ll review your submission within 48hrs');
-  ['venueName','venueArea','venueAddress','venueCuisine','venueDesc','venueMaps','venueSubmitter'].forEach(id=>{document.getElementById(id).value='';});
+  const name=document.getElementById('vName').value.trim();
+  const area=document.getElementById('vArea').value.trim();
+  if(!name||!area){toast('Please fill in name and area');return;}
+  try{await sb.from('venue_submissions').insert({name,area,type:document.getElementById('vType').value,cuisine:document.getElementById('vCuisine').value,cost:document.getElementById('vCost').value,desc:document.getElementById('vDesc').value,maps_url:document.getElementById('vMaps').value,status:'pending',submitted_at:new Date().toISOString()});}catch(e){}
+  closeAdd();toast('Submitted — thank you');
+  ['vName','vArea','vCuisine','vDesc','vMaps'].forEach(id=>{document.getElementById(id).value='';});
 }
 
 // ── QUIZ ──
-const questions=[
-  {id:"occasion",text:"What's <em>tonight</em> actually about?",options:[{emoji:"💑",label:"Couple's night out",sub:"Just the two of us"},{emoji:"🕯️",label:"A proper date night",sub:"Romantic, candlelit"},{emoji:"👯",label:"Out with friends",sub:"Loud, fun, groups"},{emoji:"🧘",label:"Solo reset",sub:"Quiet table, good book"},{emoji:"💼",label:"Work dinner",sub:"Relaxed but presentable"}]},
-  {id:"vibe",text:"Pick the <em>feeling</em> you're after",options:[{emoji:"🌿",label:"Earthy & wholesome",sub:"Natural, nourishing"},{emoji:"✨",label:"Sleek & stylish",sub:"Great lighting, aesthetic"},{emoji:"🏡",label:"Neighbourhood gem",sub:"Locals only energy"},{emoji:"🌍",label:"Global flavours",sub:"Indian, Middle Eastern, Asian"}]},
-  {id:"neighbourhood",text:"Which part of <em>London</em>?",options:[{emoji:"🗺️",label:"East London",sub:"Shoreditch, Hackney"},{emoji:"🏛️",label:"Central London",sub:"Soho, Covent Garden"},{emoji:"🌳",label:"North London",sub:"Islington, Camden"},{emoji:"🌉",label:"South London",sub:"Brixton, Peckham"}]},
-  {id:"hunger",text:"How <em>hungry</em> are you?",options:[{emoji:"🍽️",label:"Full sit-down meal",sub:"Starter, main, dessert"},{emoji:"🥙",label:"Casual & quick",sub:"Satisfying, no fuss"},{emoji:"🍷",label:"Drinks & bites",sub:"Grazing, conversation"},{emoji:"🎂",label:"It's a celebration",sub:"Pull out all stops"}]},
-  {id:"budget",text:"What's the <em>budget</em>?",options:[{emoji:"💚",label:"Under £20 a head",sub:"Street food energy"},{emoji:"💛",label:"£20–40 a head",sub:"Solid night out"},{emoji:"🧡",label:"£40–70 a head",sub:"Proper evening"},{emoji:"❤️",label:"Whatever it takes",sub:"No object tonight"}]}
+const Qs=[
+  {id:'occasion',text:'What\'s <em>tonight</em> about?',opts:[{e:'💑',l:'Date night',s:'Romantic, impressive'},{e:'👯',l:'With friends',s:'Fun, groups, loud'},{e:'🧘',l:'Solo dinner',s:'Just me'},{e:'💼',l:'Work dinner',s:'Relaxed but smart'},{e:'🎂',l:'Celebration',s:'Pull out all stops'}]},
+  {id:'cuisine',text:'What are you <em>craving</em>?',opts:[{e:'🍜',l:'Asian',s:'Japanese, Thai, Chinese'},{e:'🍕',l:'European',s:'Italian, French, Spanish'},{e:'🍛',l:'South Asian',s:'Indian, Sri Lankan'},{e:'🌮',l:'Americas',s:'Mexican, American'},{e:'🌍',l:'Middle Eastern',s:'Lebanese, Turkish'}]},
+  {id:'area',text:'Which part of <em>London</em>?',opts:[{e:'🗺️',l:'East',s:'Shoreditch, Hackney'},{e:'🏛️',l:'Central',s:'Soho, Covent Garden'},{e:'🌳',l:'North',s:'Islington, Camden'},{e:'🌉',l:'South',s:'Brixton, Peckham'}]},
+  {id:'budget',text:'What\'s the <em>budget</em>?',opts:[{e:'',l:'Under £20 a head',s:'Street food vibes'},{e:'',l:'£20–40 a head',s:'Solid night out'},{e:'',l:'£40–70 a head',s:'Proper dinner'},{e:'',l:'No limit',s:'Tonight is special'}]},
+  {id:'vibe',text:'The <em>atmosphere</em>?',opts:[{e:'',l:'Intimate & quiet',s:'Good conversation'},{e:'',l:'Buzzy & fun',s:'Energy and noise'},{e:'',l:'Sleek & minimal',s:'Design-forward'},{e:'',l:'Neighbourhood gem',s:'Local, unpretentious'}]}
 ];
-const areaMap={0:'East London',1:'Central London',2:'North London',3:'South London'};
+const areaQMap={0:'East London',1:'Central London',2:'North London',3:'South London'};
+const cuisineQMap={0:'asian',1:'italian',2:'indian',3:'mexican',4:'middle eastern'};
 
-function buildProgressDots(){
-  document.getElementById('progressDots').innerHTML=questions.map((_,i)=>`<div class="progress-dot${i===0?' active':''}" id="dot-${i}"></div>`).join('');
-}
-function updateDots(idx){questions.forEach((_,i)=>{const d=document.getElementById(`dot-${i}`);if(d)d.className='progress-dot'+(i<idx?' done':i===idx?' active':'');});}
-function showQuestion(idx){
-  const q=questions[idx];
-  document.getElementById('questionStage').innerHTML=`
+function buildDots(){document.getElementById('pdots').innerHTML=Qs.map((_,i)=>`<div class="pdot${i===0?' active':''}" id="pd${i}"></div>`).join('');}
+function updDots(idx){Qs.forEach((_,i)=>{const d=document.getElementById(`pd${i}`);if(d)d.className='pdot'+(i<idx?' done':i===idx?' active':'');});}
+function showQ(idx){
+  const q=Qs[idx];
+  document.getElementById('qStage').innerHTML=`
     <div class="q-card">
-      <div class="q-number">Question ${idx+1} of ${questions.length}</div>
+      <div class="q-num">${idx+1} / ${Qs.length}</div>
       <div class="q-text">${q.text}</div>
-      <div class="options-grid">
-        ${q.options.map((o,i)=>`<button class="option-btn" onclick="pick('${q.id}',${i},this)"><span class="opt-emoji">${o.emoji}</span><span class="opt-label">${o.label}</span><span class="opt-sub">${o.sub}</span></button>`).join('')}
+      <div class="opts">
+        ${q.opts.map((o,i)=>`<button class="opt" onclick="pick('${q.id}',${i},this)"><span class="opt-e">${o.e}</span><span class="opt-l">${o.l}</span><span class="opt-s">${o.s}</span></button>`).join('')}
       </div>
-      <div class="skip-quiz-wrap"><button class="skip-quiz-btn" onclick="showHome()">Skip — take me to search instead</button></div>
+      <div class="skip-row"><button class="skip-btn" onclick="showHome()">Skip — take me straight to search</button></div>
     </div>`;
 }
 function pick(qid,idx,btn){
-  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected'); answers[qid]=idx;
-  setTimeout(()=>{
-    currentQ++;
-    if(currentQ<questions.length){updateDots(currentQ);showQuestion(currentQ);}
-    else applyQuizAnswers();
-  },400);
+  document.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');ans[qid]=idx;
+  setTimeout(()=>{cQ++;if(cQ<Qs.length){updDots(cQ);showQ(cQ);}else applyQuiz();},380);
 }
-function applyQuizAnswers(){
-  const area=areaMap[answers.neighbourhood]||'Central London';
-  activeAreaFilter=area;
-  activeTypeFilter='restaurant';
-  // Set area chip
-  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.toggle('active',b.textContent.includes(area.split(' ')[0])));
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.id==='tabRestaurants'));
+function applyQuiz(){
+  if(ans.area!==undefined){areaF=areaQMap[ans.area]||'Central London';document.querySelectorAll('[onclick^="setArea"]').forEach(b=>b.classList.remove('active'));}
+  if(ans.cuisine!==undefined){
+    activeQ=cuisineQMap[ans.cuisine]||'';
+    document.getElementById('heroQ').value=activeQ;
+    document.getElementById('navQ').value=activeQ;
+  }
   showHome();
-  showToast(`🌿 Showing ${area} restaurants for you`);
+  if(activeQ)fetchLive(activeQ);else applyFilters();
 }
 
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 
 init();
+
 </script>
 </body>
 </html>
