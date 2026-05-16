@@ -3,174 +3,273 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sprout London</title>
+<title>Sprout London — Vegetarian & Vegan Guide</title>
+<meta name="description" content="Discover vegetarian restaurants, food markets and dishes across London.">
+<meta property="og:title" content="Sprout London 🌿">
+<meta property="og:description" content="Find the best vegetarian spots, markets and dishes in London.">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --cream: #F5F0E8; --dark: #0E0E0E; --green: #2D5A27; --green-light: #4A8C42;
-    --muted: #8A8A7A; --card-bg: #1A1A1A; --error: #e05c5c;
-  }
-  body { font-family: 'DM Sans', sans-serif; background: var(--dark); color: var(--cream); min-height: 100vh; overflow-x: hidden; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F0E8; --dark: #0E0E0E; --green: #2D5A27; --green-light: #4A8C42;
+  --muted: #8A8A7A; --card-bg: #1A1A1A; --error: #e05c5c; --border: #222;
+  --surface: #141414;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--dark); color: var(--cream); min-height: 100vh; overflow-x: hidden; }
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
 
-  .screen { display: none; min-height: 100vh; flex-direction: column; }
-  .screen.active { display: flex; }
+/* ── NAV ── */
+.app-nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: rgba(14,14,14,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); gap: 1rem; }
+.nav-logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #a8d5a2, #4A8C42); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; cursor: pointer; flex-shrink: 0; }
+.nav-tabs { display: flex; gap: 0.3rem; }
+.nav-tab { background: transparent; border: none; color: var(--muted); padding: 0.45rem 0.9rem; border-radius: 50px; font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+.nav-tab:hover { color: var(--cream); }
+.nav-tab.active { background: #1e1e1e; color: var(--cream); border: 1px solid var(--border); }
+.nav-right { display: flex; align-items: center; gap: 0.7rem; flex-shrink: 0; }
+.nav-btn { background: transparent; border: 1.5px solid var(--border); color: var(--cream); padding: 0.45rem 1rem; border-radius: 50px; font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
+.nav-btn:hover { border-color: var(--green-light); }
+.nav-btn.primary { background: var(--green); border-color: var(--green); }
+.nav-btn.primary:hover { background: var(--green-light); }
+.nav-user { font-size: 0.8rem; color: var(--muted); }
 
-  /* AUTH */
-  #authScreen { align-items: center; justify-content: center; background: radial-gradient(ellipse 80% 60% at 50% 40%, #1e3d1a 0%, #0E0E0E 70%); }
-  .auth-box { width: 100%; max-width: 420px; padding: 2rem; animation: fadeUp 0.6s ease both; }
-  .auth-logo { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 700; background: linear-gradient(135deg, #a8d5a2 0%, #4A8C42 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; margin-bottom: 0.3rem; }
-  .auth-tagline { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 2.5rem; letter-spacing: 0.1em; text-transform: uppercase; }
-  .auth-tabs { display: flex; background: #1a1a1a; border-radius: 12px; padding: 4px; margin-bottom: 2rem; border: 1px solid #2a2a2a; }
-  .auth-tab { flex: 1; padding: 0.7rem; text-align: center; border-radius: 9px; cursor: pointer; font-size: 0.88rem; font-weight: 500; transition: all 0.2s; color: var(--muted); border: none; background: transparent; font-family: 'DM Sans', sans-serif; }
-  .auth-tab.active { background: var(--green); color: var(--cream); }
-  .auth-field { margin-bottom: 1rem; }
-  .auth-field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; text-transform: uppercase; }
-  .auth-field input { width: 100%; background: #1a1a1a; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; outline: none; }
-  .auth-field input:focus { border-color: var(--green-light); }
-  .auth-submit { width: 100%; background: var(--green); color: var(--cream); border: none; padding: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 500; cursor: pointer; margin-top: 0.5rem; transition: background 0.2s; font-family: 'DM Sans', sans-serif; }
-  .auth-submit:hover { background: var(--green-light); }
-  .auth-ghost { width: 100%; background: #1a1a1a; color: var(--muted); border: 1.5px solid #2a2a2a; padding: 1rem; border-radius: 10px; font-size: 0.95rem; font-weight: 500; cursor: pointer; margin-top: 0.8rem; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
-  .auth-ghost:hover { border-color: var(--green-light); color: var(--cream); }
-  .auth-divider { text-align: center; color: var(--muted); font-size: 0.8rem; margin: 1rem 0; }
-  .auth-error { color: var(--error); font-size: 0.82rem; margin-top: 0.8rem; text-align: center; min-height: 1.2rem; }
+/* ── AUTH ── */
+#authScreen { align-items: center; justify-content: center; background: radial-gradient(ellipse 80% 60% at 50% 40%, #1e3d1a 0%, #0E0E0E 70%); }
+.auth-box { width: 100%; max-width: 420px; padding: 2rem; animation: fadeUp 0.6s ease both; }
+.auth-logo { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 700; background: linear-gradient(135deg, #a8d5a2 0%, #4A8C42 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; margin-bottom: 0.3rem; }
+.auth-tagline { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: #fff; color: #1a1a1a; border: none; padding: 0.9rem 1rem; border-radius: 10px; font-size: 0.95rem; font-weight: 500; cursor: pointer; margin-bottom: 1.2rem; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+.google-btn:hover { background: #f0f0f0; transform: translateY(-1px); }
+.auth-divider-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
+.auth-divider-row span { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+.auth-divider-row::before, .auth-divider-row::after { content:''; flex:1; height:1px; background:#2a2a2a; }
+.auth-tabs { display: flex; background: #1a1a1a; border-radius: 12px; padding: 4px; margin-bottom: 1.5rem; border: 1px solid #2a2a2a; }
+.auth-tab { flex: 1; padding: 0.7rem; text-align: center; border-radius: 9px; cursor: pointer; font-size: 0.88rem; font-weight: 500; transition: all 0.2s; color: var(--muted); border: none; background: transparent; font-family: 'DM Sans', sans-serif; }
+.auth-tab.active { background: var(--green); color: var(--cream); }
+.auth-field { margin-bottom: 1rem; }
+.auth-field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.auth-field input { width: 100%; background: #1a1a1a; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; outline: none; }
+.auth-field input:focus { border-color: var(--green-light); }
+.auth-submit { width: 100%; background: var(--green); color: var(--cream); border: none; padding: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 500; cursor: pointer; margin-top: 0.5rem; transition: background 0.2s; font-family: 'DM Sans', sans-serif; }
+.auth-submit:hover { background: var(--green-light); }
+.auth-ghost { width: 100%; background: transparent; color: var(--muted); border: 1.5px solid #2a2a2a; padding: 0.9rem; border-radius: 10px; font-size: 0.9rem; cursor: pointer; margin-top: 1rem; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+.auth-ghost:hover { border-color: var(--green-light); color: var(--cream); }
+.auth-error { color: var(--error); font-size: 0.82rem; margin-top: 0.8rem; text-align: center; min-height: 1.2rem; }
 
-  /* INTRO */
-  #intro { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--dark); z-index: 100; transition: opacity 0.8s ease, transform 0.8s ease; }
-  #intro.hide { opacity: 0; transform: scale(1.04); pointer-events: none; }
-  .intro-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 40%, #1e3d1a 0%, #0E0E0E 70%); }
-  .intro-grain { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); opacity: 0.4; }
-  .intro-content { position: relative; text-align: center; padding: 2rem; }
-  .sprout-logo { font-family: 'Playfair Display', serif; font-size: clamp(3rem, 10vw, 6rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1; margin-bottom: 0.3rem; background: linear-gradient(135deg, #a8d5a2 0%, #4A8C42 50%, #2D5A27 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: fadeUp 1s ease both; }
-  .sprout-sub { font-size: 0.95rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 3rem; animation: fadeUp 1s 0.2s ease both; }
-  .intro-tagline { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(1.1rem, 3vw, 1.5rem); color: var(--cream); opacity: 0.85; max-width: 480px; margin: 0 auto 2.5rem; line-height: 1.5; animation: fadeUp 1s 0.35s ease both; }
-  .intro-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; animation: fadeUp 1s 0.5s ease both; }
-  .start-btn { background: var(--green); color: var(--cream); border: none; padding: 1rem 2.8rem; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500; border-radius: 50px; cursor: pointer; transition: background 0.25s, transform 0.2s; }
-  .start-btn:hover { background: var(--green-light); transform: translateY(-2px); }
+/* ── HOME ── */
+#homeScreen { background: var(--dark); }
+.home-hero { padding: 3rem 2rem 2.5rem; text-align: center; background: radial-gradient(ellipse 90% 70% at 50% 0%, #1a3318 0%, transparent 65%); }
+.home-hero-eyebrow { font-size: 0.72rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.8rem; }
+.home-hero-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 700; line-height: 1.15; margin-bottom: 0.8rem; }
+.home-hero-title em { font-style: italic; color: #a8d5a2; }
+.home-hero-sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
 
-  /* NAV */
-  .app-nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 2rem; background: rgba(14,14,14,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid #1a1a1a; }
-  .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; background: linear-gradient(135deg, #a8d5a2, #4A8C42); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  .nav-right { display: flex; align-items: center; gap: 1rem; }
-  .nav-favs-btn { background: transparent; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
-  .nav-favs-btn:hover { border-color: var(--green-light); }
-  .nav-user { font-size: 0.82rem; color: var(--muted); }
-  .nav-signout { background: transparent; border: none; color: var(--muted); font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: underline; }
-  .nav-signout:hover { color: var(--cream); }
+/* Search bar */
+.search-wrap { max-width: 680px; margin: 0 auto 1.5rem; padding: 0 1rem; }
+.search-bar { display: flex; align-items: center; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; transition: border-color 0.2s; }
+.search-bar:focus-within { border-color: var(--green-light); }
+.search-icon { padding: 0 1rem; color: var(--muted); font-size: 1.1rem; flex-shrink: 0; }
+.search-input { flex: 1; background: transparent; border: none; color: var(--cream); padding: 1rem 0; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; outline: none; }
+.search-input::placeholder { color: var(--muted); }
+.search-go { background: var(--green); color: var(--cream); border: none; padding: 0.7rem 1.4rem; margin: 0.4rem; border-radius: 10px; font-size: 0.88rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; white-space: nowrap; }
+.search-go:hover { background: var(--green-light); }
 
-  /* QUIZ */
-  #quiz { background: var(--dark); }
-  .quiz-subheader { padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
-  .progress-wrap { display: flex; gap: 6px; }
-  .progress-dot { width: 28px; height: 4px; border-radius: 2px; background: #333; transition: background 0.4s; }
-  .progress-dot.done { background: var(--green-light); }
-  .progress-dot.active { background: var(--cream); }
-  .question-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
-  .q-card { width: 100%; max-width: 680px; animation: slideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .q-number { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green-light); margin-bottom: 1rem; }
-  .q-text { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); line-height: 1.25; margin-bottom: 2.5rem; font-weight: 700; }
-  .q-text em { font-style: italic; color: #a8d5a2; }
-  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .options-grid .option-btn:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 50%; margin: 0 auto; }
-  .option-btn { background: #1A1A1A; border: 1.5px solid #2A2A2A; color: var(--cream); padding: 1.2rem 1.4rem; border-radius: 14px; cursor: pointer; text-align: left; transition: all 0.2s; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; line-height: 1.4; }
-  .option-btn .opt-emoji { font-size: 1.5rem; display: block; margin-bottom: 0.5rem; }
-  .option-btn .opt-label { font-weight: 500; display: block; }
-  .option-btn .opt-sub { font-size: 0.8rem; color: var(--muted); display: block; margin-top: 0.2rem; }
-  .option-btn:hover { border-color: var(--green-light); background: #222; transform: translateY(-2px); }
-  .option-btn.selected { border-color: var(--green-light); background: #1e3d1a; }
+/* Filters */
+.filters-wrap { max-width: 780px; margin: 0 auto 0.5rem; padding: 0 1.5rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+.filter-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-right: 0.3rem; }
+.filter-chip { background: var(--card-bg); border: 1.5px solid var(--border); color: var(--muted); padding: 0.4rem 0.9rem; border-radius: 50px; font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
+.filter-chip:hover { border-color: var(--green-light); color: var(--cream); }
+.filter-chip.active { background: #1e3d1a; border-color: var(--green-light); color: #a8d5a2; }
 
-  /* LOADING */
-  #loading { position: fixed; inset: 0; background: var(--dark); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
-  #loading.active { display: flex; }
-  .loading-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-style: italic; color: var(--cream); opacity: 0.8; animation: pulse 1.5s ease-in-out infinite; }
-  .loading-dots { display: flex; gap: 8px; }
-  .loading-dot { width: 8px; height: 8px; background: var(--green-light); border-radius: 50%; animation: bounce 1.2s ease-in-out infinite; }
-  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
-  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+/* Filter dropdowns */
+.filter-selects { max-width: 780px; margin: 0 auto 1.5rem; padding: 0 1.5rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.filter-select { background: var(--card-bg); border: 1.5px solid var(--border); color: var(--cream); padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; font-family: 'DM Sans', sans-serif; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; padding-right: 1.8rem; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238A8A7A'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.7rem center; }
+.filter-select:focus { border-color: var(--green-light); }
 
-  /* RESULTS */
-  #results { background: var(--dark); }
-  .results-hero { padding: 3rem 2rem 2rem; text-align: center; background: radial-gradient(ellipse 100% 100% at 50% 0%, #1e3d1a 0%, transparent 70%); }
-  .results-eyebrow { font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.8rem; }
-  .results-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 700; line-height: 1.2; margin-bottom: 0.6rem; }
-  .results-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2.5rem; }
-  .restaurants-list { padding: 0 1.5rem 4rem; max-width: 780px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 1.5rem; }
+/* Quiz shortcut */
+.quiz-shortcut { max-width: 780px; margin: 0 auto 2rem; padding: 0 1.5rem; }
+.quiz-shortcut-card { background: linear-gradient(135deg, #1a2e19 0%, #111 100%); border: 1px solid #2D5A27; border-radius: 14px; padding: 1.2rem 1.6rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; transition: all 0.2s; }
+.quiz-shortcut-card:hover { border-color: var(--green-light); transform: translateY(-2px); }
+.quiz-shortcut-text { font-size: 0.9rem; color: var(--cream); }
+.quiz-shortcut-text strong { display: block; font-size: 1rem; margin-bottom: 0.2rem; }
+.quiz-shortcut-text span { color: #a8d5a2; font-size: 0.82rem; }
+.quiz-shortcut-arrow { font-size: 1.4rem; color: var(--green-light); }
 
-  /* CARDS */
-  .restaurant-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid #222; animation: fadeUp 0.6s ease both; transition: transform 0.2s, border-color 0.2s; }
-  .restaurant-card:nth-child(1) { animation-delay: 0.1s; }
-  .restaurant-card:nth-child(2) { animation-delay: 0.25s; }
-  .restaurant-card:nth-child(3) { animation-delay: 0.4s; }
-  .restaurant-card:hover { transform: translateY(-4px); border-color: #2D5A27; }
-  .card-image-wrap { height: 200px; position: relative; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
-  .card-image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-  .restaurant-card:hover .card-image-wrap img { transform: scale(1.04); }
-  .card-placeholder { font-size: 4rem; }
-  .card-rank { position: absolute; top: 1rem; left: 1rem; background: var(--green); color: var(--cream); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.8rem; border-radius: 50px; }
-  .card-rating-badge { position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: var(--cream); font-size: 0.85rem; font-weight: 500; padding: 0.3rem 0.7rem; border-radius: 50px; }
-  .card-body { padding: 1.4rem 1.6rem; }
-  .card-cuisine { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green-light); margin-bottom: 0.4rem; }
-  .card-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem; }
-  .card-area { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.9rem; }
-  .card-vibe { font-size: 0.88rem; color: #c8c8b8; line-height: 1.6; margin-bottom: 1.2rem; font-style: italic; }
-  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid #252525; }
-  .card-price { font-size: 0.85rem; color: var(--muted); }
-  .card-actions { display: flex; gap: 0.6rem; align-items: center; }
-  .fav-btn { background: transparent; border: 1.5px solid #333; color: var(--muted); width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-  .fav-btn:hover { border-color: #e05c7a; }
-  .fav-btn.saved { border-color: #e05c7a; background: rgba(224,92,122,0.1); }
-  .maps-btn { background: var(--green); color: var(--cream); border: none; padding: 0.55rem 1.4rem; border-radius: 50px; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: background 0.2s; font-family: 'DM Sans', sans-serif; text-decoration: none; display: inline-flex; align-items: center; }
-  .maps-btn:hover { background: var(--green-light); }
+/* Section headers */
+.section-header { max-width: 780px; margin: 0 auto 1rem; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+.section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; }
+.section-count { font-size: 0.8rem; color: var(--muted); }
 
-  /* FAVOURITES PANEL */
-  #favsPanel { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; justify-content: flex-end; }
-  #favsPanel.active { display: flex; }
-  .favs-drawer { background: #111; width: 100%; max-width: 400px; height: 100vh; overflow-y: auto; padding: 2rem; animation: slideInRight 0.35s cubic-bezier(0.22,1,0.36,1) both; border-left: 1px solid #222; }
-  .favs-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
-  .favs-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; }
-  .favs-close { background: transparent; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
-  .fav-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #1a1a1a; }
-  .fav-item-info { flex: 1; }
-  .fav-item-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
-  .fav-item-area { font-size: 0.8rem; color: var(--muted); }
-  .fav-remove { background: transparent; border: none; color: #555; cursor: pointer; font-size: 1rem; padding: 0.3rem; }
-  .fav-remove:hover { color: var(--error); }
-  .favs-empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-style: italic; line-height: 1.8; }
+/* Results grid */
+.results-grid { max-width: 780px; margin: 0 auto; padding: 0 1.5rem 4rem; display: flex; flex-direction: column; gap: 1.2rem; }
 
-  .restart-wrap { text-align: center; padding: 0 1.5rem 3rem; }
-  .restart-btn { background: transparent; border: 1.5px solid #333; color: var(--muted); padding: 0.7rem 2rem; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-  .restart-btn:hover { border-color: var(--green-light); color: var(--cream); }
+/* Cards */
+.restaurant-card { background: var(--card-bg); border-radius: 18px; overflow: hidden; border: 1px solid var(--border); transition: transform 0.2s, border-color 0.2s; animation: fadeUp 0.5s ease both; }
+.restaurant-card:hover { transform: translateY(-3px); border-color: #2D5A27; }
+.card-image-wrap { height: 180px; position: relative; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; }
+.card-image-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.restaurant-card:hover .card-image-wrap img { transform: scale(1.04); }
+.card-placeholder { font-size: 3.5rem; }
+.card-badge { position: absolute; top: 0.8rem; left: 0.8rem; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25rem 0.7rem; border-radius: 50px; }
+.badge-green { background: var(--green); color: var(--cream); }
+.badge-orange { background: #8B4513; color: #ffd89b; }
+.badge-purple { background: #3d1a5a; color: #c8a8e0; }
+.card-rating-badge { position: absolute; top: 0.8rem; right: 0.8rem; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: var(--cream); font-size: 0.82rem; font-weight: 500; padding: 0.25rem 0.6rem; border-radius: 50px; }
+.card-body { padding: 1.2rem 1.4rem; }
+.card-type-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+.card-type { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green-light); }
+.card-dot { color: var(--border); font-size: 0.5rem; }
+.card-area-small { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.05em; }
+.card-name { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+.card-desc { font-size: 0.84rem; color: #b8b8a8; line-height: 1.55; margin-bottom: 1rem; font-style: italic; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.tag { background: #1e1e1e; border: 1px solid #2a2a2a; color: #888; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 50px; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 0.9rem; border-top: 1px solid #1e1e1e; }
+.card-meta { display: flex; align-items: center; gap: 0.8rem; }
+.card-price { font-size: 0.82rem; color: var(--muted); }
+.card-cost { font-size: 0.78rem; color: var(--muted); }
+.card-actions { display: flex; gap: 0.5rem; align-items: center; }
+.fav-btn { background: transparent; border: 1.5px solid #2a2a2a; width: 34px; height: 34px; border-radius: 50%; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.fav-btn:hover { border-color: #e05c7a; }
+.fav-btn.saved { border-color: #e05c7a; background: rgba(224,92,122,0.1); }
+.maps-btn { background: var(--green); color: var(--cream); border: none; padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: background 0.2s; font-family: 'DM Sans', sans-serif; text-decoration: none; display: inline-flex; align-items: center; }
+.maps-btn:hover { background: var(--green-light); }
 
-  /* TOAST */
-  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3d1a; color: var(--cream); padding: 0.8rem 1.6rem; border-radius: 50px; font-size: 0.88rem; z-index: 999; transition: transform 0.35s cubic-bezier(0.22,1,0.36,1); white-space: nowrap; border: 1px solid var(--green); }
-  .toast.show { transform: translateX(-50%) translateY(0); }
+/* Empty state */
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+.empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty-state p { font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
+.empty-state-btn { background: var(--green); color: var(--cream); border: none; padding: 0.8rem 1.8rem; border-radius: 50px; font-size: 0.88rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes slideInRight { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-  @keyframes bounce { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(-10px); opacity: 1; } }
+/* ── ADD VENUE MODAL ── */
+#addVenueModal { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 400; display: none; align-items: center; justify-content: center; padding: 1rem; }
+#addVenueModal.active { display: flex; }
+.modal-box { background: #111; border: 1px solid #2a2a2a; border-radius: 20px; padding: 2rem; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; animation: fadeUp 0.35s ease both; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; }
+.modal-close { background: transparent; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
+.modal-field { margin-bottom: 1rem; }
+.modal-field label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.modal-field input, .modal-field select, .modal-field textarea { width: 100%; background: #1a1a1a; border: 1.5px solid #2a2a2a; color: var(--cream); padding: 0.8rem 1rem; border-radius: 10px; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; }
+.modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--green-light); }
+.modal-field textarea { resize: vertical; min-height: 80px; }
+.modal-field select { appearance: none; -webkit-appearance: none; }
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+.modal-submit { width: 100%; background: var(--green); color: var(--cream); border: none; padding: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; margin-top: 0.5rem; }
+.modal-submit:hover { background: var(--green-light); }
+.modal-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.8rem; text-align: center; line-height: 1.5; }
+
+/* ── QUIZ ── */
+#quizScreen { background: var(--dark); }
+.quiz-subheader { padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+.progress-wrap { display: flex; gap: 6px; }
+.progress-dot { width: 28px; height: 4px; border-radius: 2px; background: #333; transition: background 0.4s; }
+.progress-dot.done { background: var(--green-light); }
+.progress-dot.active { background: var(--cream); }
+.question-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+.q-card { width: 100%; max-width: 680px; animation: slideIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.q-number { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green-light); margin-bottom: 1rem; }
+.q-text { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.25; margin-bottom: 2rem; font-weight: 700; }
+.q-text em { font-style: italic; color: #a8d5a2; }
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.options-grid .option-btn:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 50%; margin: 0 auto; }
+.option-btn { background: #1A1A1A; border: 1.5px solid #2A2A2A; color: var(--cream); padding: 1.1rem 1.2rem; border-radius: 14px; cursor: pointer; text-align: left; transition: all 0.2s; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; line-height: 1.4; }
+.option-btn .opt-emoji { font-size: 1.4rem; display: block; margin-bottom: 0.4rem; }
+.option-btn .opt-label { font-weight: 500; display: block; }
+.option-btn .opt-sub { font-size: 0.78rem; color: var(--muted); display: block; margin-top: 0.2rem; }
+.option-btn:hover { border-color: var(--green-light); background: #1a1a1a; transform: translateY(-2px); }
+.option-btn.selected { border-color: var(--green-light); background: #1e3d1a; }
+.skip-quiz-wrap { text-align: center; padding: 1.5rem 0 0; }
+.skip-quiz-btn { background: transparent; border: none; color: var(--muted); font-size: 0.85rem; cursor: pointer; font-family: 'DM Sans', sans-serif; text-decoration: underline; }
+.skip-quiz-btn:hover { color: var(--cream); }
+
+/* ── LOADING ── */
+#loadingScreen { position: fixed; inset: 0; background: var(--dark); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
+#loadingScreen.active { display: flex; }
+.loading-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-style: italic; color: var(--cream); opacity: 0.8; animation: pulse 1.5s ease-in-out infinite; }
+.loading-dots { display: flex; gap: 8px; }
+.loading-dot { width: 8px; height: 8px; background: var(--green-light); border-radius: 50%; animation: bounce 1.2s ease-in-out infinite; }
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── FAVS PANEL ── */
+#favsPanel { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; justify-content: flex-end; }
+#favsPanel.active { display: flex; }
+.favs-drawer { background: #111; width: 100%; max-width: 400px; height: 100vh; overflow-y: auto; padding: 2rem; animation: slideInRight 0.35s cubic-bezier(0.22,1,0.36,1) both; border-left: 1px solid #222; }
+.favs-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+.favs-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; }
+.favs-close { background: transparent; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
+.fav-item { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid #1a1a1a; }
+.fav-item-info { flex: 1; }
+.fav-item-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.15rem; }
+.fav-item-area { font-size: 0.78rem; color: var(--muted); }
+.fav-remove { background: transparent; border: none; color: #444; cursor: pointer; font-size: 0.9rem; }
+.fav-remove:hover { color: var(--error); }
+.favs-empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-style: italic; line-height: 1.8; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e3d1a; color: var(--cream); padding: 0.75rem 1.5rem; border-radius: 50px; font-size: 0.85rem; z-index: 999; transition: transform 0.35s cubic-bezier(0.22,1,0.36,1); white-space: nowrap; border: 1px solid var(--green); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideInRight { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+@keyframes bounce { 0%,100%{transform:translateY(0);opacity:.4} 50%{transform:translateY(-10px);opacity:1} }
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
+<div id="loadingScreen"><div class="loading-text" id="loadingText">Scanning London…</div><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>
 
-<!-- LOADING -->
-<div id="loading">
-  <div class="loading-text" id="loadingText">Scanning London…</div>
-  <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
-</div>
-
-<!-- FAVOURITES PANEL -->
+<!-- FAVS PANEL -->
 <div id="favsPanel" onclick="closeFavsOutside(event)">
   <div class="favs-drawer">
-    <div class="favs-header">
-      <div class="favs-title">❤️ Saved Spots</div>
-      <button class="favs-close" onclick="closeFavs()">✕</button>
-    </div>
+    <div class="favs-header"><div class="favs-title">❤️ Saved Spots</div><button class="favs-close" onclick="closeFavs()">✕</button></div>
     <div id="favsList"></div>
+  </div>
+</div>
+
+<!-- ADD VENUE MODAL -->
+<div id="addVenueModal" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🌿 Add a Venue</div>
+      <button class="modal-close" onclick="closeAddVenue()">✕</button>
+    </div>
+    <div class="modal-field"><label>Venue name *</label><input type="text" id="venueName" placeholder="e.g. The Green Kitchen"></div>
+    <div class="modal-row">
+      <div class="modal-field"><label>Area / Neighbourhood *</label><input type="text" id="venueArea" placeholder="e.g. Hackney"></div>
+      <div class="modal-field"><label>Type *</label>
+        <select id="venueType">
+          <option value="restaurant">Restaurant</option>
+          <option value="cafe">Café</option>
+          <option value="market">Food Market</option>
+          <option value="popup">Pop-up</option>
+          <option value="takeaway">Takeaway</option>
+          <option value="bar">Bar / Pub</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-field"><label>Address</label><input type="text" id="venueAddress" placeholder="Full street address"></div>
+    <div class="modal-row">
+      <div class="modal-field"><label>Cuisine / Dishes</label><input type="text" id="venueCuisine" placeholder="e.g. Indian, wraps, dosas"></div>
+      <div class="modal-field"><label>Cost for 2 (approx)</label>
+        <select id="venueCost">
+          <option value="under20">Under £20</option>
+          <option value="20-40">£20–40</option>
+          <option value="40-70">£40–70</option>
+          <option value="70plus">£70+</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-field"><label>Why is it special? (optional)</label><textarea id="venueDesc" placeholder="Tell people what makes this place worth visiting…"></textarea></div>
+    <div class="modal-field"><label>Google Maps link (optional)</label><input type="url" id="venueMaps" placeholder="https://maps.google.com/..."></div>
+    <div class="modal-field"><label>Your name or email (optional)</label><input type="text" id="venueSubmitter" placeholder="So we can credit you"></div>
+    <button class="modal-submit" onclick="submitVenue()">Submit venue →</button>
+    <div class="modal-note">We'll review submissions within 48 hours before publishing. Thank you for helping grow Sprout! 🌱</div>
   </div>
 </div>
 
@@ -179,6 +278,11 @@
   <div class="auth-box">
     <div class="auth-logo">Sprout</div>
     <div class="auth-tagline">London · Vegetarian Guide</div>
+    <button class="google-btn" onclick="handleGoogleLogin()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+    <div class="auth-divider-row"><span>or use email</span></div>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign in</button>
       <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Create account</button>
@@ -187,435 +291,425 @@
       <div class="auth-field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
       <div class="auth-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
       <button class="auth-submit" onclick="handleLogin()">Sign in →</button>
-      <div class="auth-divider">or</div>
-      <button class="auth-ghost" onclick="guestMode()">Continue without account</button>
     </div>
     <div id="signupForm" style="display:none">
       <div class="auth-field"><label>Email</label><input type="email" id="signupEmail" placeholder="you@example.com"></div>
       <div class="auth-field"><label>Password</label><input type="password" id="signupPassword" placeholder="At least 6 characters"></div>
       <button class="auth-submit" onclick="handleSignup()">Create account →</button>
-      <div class="auth-divider">or</div>
-      <button class="auth-ghost" onclick="guestMode()">Continue without account</button>
     </div>
+    <button class="auth-ghost" onclick="guestMode()">Browse without account</button>
     <div class="auth-error" id="authError"></div>
   </div>
 </div>
 
-<!-- INTRO -->
-<div id="intro" style="display:none">
-  <div class="intro-bg"></div>
-  <div class="intro-grain"></div>
-  <div class="intro-content">
-    <div class="sprout-logo">Sprout</div>
-    <div class="sprout-sub">London · Vegetarian Guide</div>
-    <p class="intro-tagline">Not another list. A recommendation from someone who actually knows.</p>
-    <div class="intro-btns">
-      <button class="start-btn" onclick="startQuiz()">Find my spot tonight →</button>
+<!-- HOME -->
+<div id="homeScreen" class="screen">
+  <nav class="app-nav">
+    <div class="nav-logo" onclick="showHome()">Sprout</div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tabAll" onclick="setTypeFilter('all',this)">All</button>
+      <button class="nav-tab" id="tabRestaurants" onclick="setTypeFilter('restaurant',this)">Restaurants</button>
+      <button class="nav-tab" id="tabMarkets" onclick="setTypeFilter('market',this)">Markets</button>
+      <button class="nav-tab" id="tabCafes" onclick="setTypeFilter('cafe',this)">Cafés</button>
     </div>
+    <div class="nav-right">
+      <button class="nav-btn" onclick="openAddVenue()">+ Add venue</button>
+      <button class="nav-btn" onclick="openFavs()">❤️ Saved</button>
+      <span class="nav-user" id="navUser"></span>
+      <button class="nav-btn" id="navSignout" onclick="handleSignout()" style="display:none">Sign out</button>
+    </div>
+  </nav>
+
+  <div class="home-hero">
+    <div class="home-hero-eyebrow">London · Vegetarian & Vegan</div>
+    <h1 class="home-hero-title">Find your next <em>favourite</em> spot</h1>
+    <p class="home-hero-sub">Restaurants, markets, cafés and hidden gems — all in one place</p>
+
+    <div class="search-wrap">
+      <div class="search-bar">
+        <div class="search-icon">🔍</div>
+        <input class="search-input" id="searchInput" placeholder="Search by place, area, or dish (e.g. dosas, ramen, Borough…)" onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="search-go" onclick="doSearch()">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filters-wrap">
+    <span class="filter-label">Area:</span>
+    <button class="filter-chip active" onclick="setAreaFilter('all',this)">All London</button>
+    <button class="filter-chip" onclick="setAreaFilter('East London',this)">East</button>
+    <button class="filter-chip" onclick="setAreaFilter('Central London',this)">Central</button>
+    <button class="filter-chip" onclick="setAreaFilter('North London',this)">North</button>
+    <button class="filter-chip" onclick="setAreaFilter('South London',this)">South</button>
+    <button class="filter-chip" onclick="setAreaFilter('West London',this)">West</button>
+  </div>
+
+  <div class="filter-selects">
+    <select class="filter-select" id="ratingFilter" onchange="applyFilters()">
+      <option value="0">Any rating</option>
+      <option value="4">4.0+ stars</option>
+      <option value="4.5">4.5+ stars</option>
+      <option value="4.8">4.8+ stars</option>
+    </select>
+    <select class="filter-select" id="costFilter" onchange="applyFilters()">
+      <option value="all">Any budget</option>
+      <option value="under20">Under £20 for 2</option>
+      <option value="20-40">£20–40 for 2</option>
+      <option value="40-70">£40–70 for 2</option>
+      <option value="70plus">£70+ for 2</option>
+    </select>
+    <select class="filter-select" id="sortFilter" onchange="applyFilters()">
+      <option value="rating">Sort: Top rated</option>
+      <option value="name">Sort: A–Z</option>
+    </select>
+  </div>
+
+  <!-- QUIZ SHORTCUT -->
+  <div class="quiz-shortcut">
+    <div class="quiz-shortcut-card" onclick="goToQuiz()">
+      <div class="quiz-shortcut-text">
+        <strong>✨ Not sure where to go?</strong>
+        <span>Answer 5 quick questions and get a personalised recommendation →</span>
+      </div>
+      <div class="quiz-shortcut-arrow">→</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title" id="sectionTitle">All venues</div>
+    <div class="section-count" id="sectionCount"></div>
+  </div>
+
+  <div class="results-grid" id="resultsGrid">
+    <div class="empty-state"><div class="empty-state-icon">🌿</div><p>Loading spots…</p></div>
   </div>
 </div>
 
 <!-- QUIZ -->
-<div id="quiz" class="screen">
-  <div class="app-nav">
-    <div class="nav-logo">Sprout</div>
+<div id="quizScreen" class="screen">
+  <nav class="app-nav">
+    <div class="nav-logo" onclick="showHome()">Sprout</div>
     <div class="nav-right">
-      <button class="nav-favs-btn" onclick="openFavs()">❤️ Saved</button>
-      <span class="nav-user" id="navUser"></span>
-      <button class="nav-signout" id="navSignout" onclick="handleSignout()" style="display:none">Sign out</button>
+      <button class="nav-btn" onclick="showHome()">← Back to search</button>
     </div>
-  </div>
+  </nav>
   <div class="quiz-subheader">
-    <div style="font-size:0.8rem;color:var(--muted)">Answer a few questions</div>
+    <div style="font-size:0.8rem;color:var(--muted)">Personalised pick</div>
     <div class="progress-wrap" id="progressDots"></div>
   </div>
   <div class="question-stage" id="questionStage"></div>
-</div>
-
-<!-- RESULTS -->
-<div id="results" class="screen">
-  <div class="app-nav">
-    <div class="nav-logo">Sprout</div>
-    <div class="nav-right">
-      <button class="nav-favs-btn" onclick="openFavs()">❤️ Saved</button>
-      <span class="nav-user" id="navUser2"></span>
-      <button class="nav-signout" id="navSignout2" onclick="handleSignout()" style="display:none">Sign out</button>
-    </div>
-  </div>
-  <div class="results-hero">
-    <div class="results-eyebrow">Your picks for tonight</div>
-    <div class="results-title" id="resultsTitle">We found your spot.</div>
-    <div class="results-sub" id="resultsSub">Based on your vibe, here's where we'd send you.</div>
-  </div>
-  <div class="restaurants-list" id="restaurantsList"></div>
-  <div class="restart-wrap"><button class="restart-btn" onclick="restart()">↩ Start over</button></div>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://olmfwrlhloxkdrarlfmc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VihKP57OQc4ydpeXJEzUhA_xwK_QgWW';
 const GOOGLE_KEY   = 'AIzaSyB9ZfLPhwr-KTx1xjPu0BF3wFAgweftoXM';
+const APP_URL      = 'https://sprout-gamma.vercel.app';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
 let favourites  = [];
-let currentQ    = 0;
-let answers     = {};
-let currentRestaurants = [];
+let allVenues   = [];
+let activeTypeFilter = 'all';
+let activeAreaFilter = 'all';
+let activeQuery = '';
+let currentQ = 0;
+let answers  = {};
 
-const questions = [
-  { id:"occasion", text:"What's <em>tonight</em> actually about?", options:[
-    {emoji:"💑",label:"Couple's night out",sub:"Just the two of us, making it count"},
-    {emoji:"🕯️",label:"A proper date night",sub:"Romantic, candlelit, impress them"},
-    {emoji:"👯",label:"Out with friends",sub:"Loud, fun, good for groups"},
-    {emoji:"🧘",label:"Solo reset",sub:"Quiet table, good book"},
-    {emoji:"💼",label:"Casual work dinner",sub:"Relaxed but presentable"}
-  ]},
-  { id:"vibe", text:"Pick the <em>feeling</em> you're after", options:[
-    {emoji:"🌿",label:"Earthy & wholesome",sub:"Wooden tables, natural light"},
-    {emoji:"✨",label:"Sleek & stylish",sub:"Great lighting, strong aesthetic"},
-    {emoji:"🏡",label:"Warm neighbourhood gem",sub:"Locals only kind of energy"},
-    {emoji:"🌍",label:"Global flavours",sub:"Indian, Middle Eastern, Asian fusion"}
-  ]},
-  { id:"neighbourhood", text:"Which part of <em>London</em> are you in?", options:[
-    {emoji:"🗺️",label:"East London",sub:"Shoreditch, Hackney, Bethnal Green"},
-    {emoji:"🏛️",label:"Central London",sub:"Soho, Covent Garden, Clerkenwell"},
-    {emoji:"🌳",label:"North London",sub:"Islington, Camden, Stoke Newington"},
-    {emoji:"🌉",label:"South London",sub:"Brixton, Peckham, Borough"}
-  ]},
-  { id:"hunger", text:"How <em>hungry</em> are you really?", options:[
-    {emoji:"🍽️",label:"Full sit-down meal",sub:"Starter, main, maybe dessert"},
-    {emoji:"🥙",label:"Something good but casual",sub:"Quick, satisfying, no fuss"},
-    {emoji:"🍷",label:"More drinks, some bites",sub:"Grazing & good conversation"},
-    {emoji:"🎂",label:"It's a celebration",sub:"Pull out all the stops"}
-  ]},
-  { id:"budget", text:"What's the <em>budget</em> looking like?", options:[
-    {emoji:"💚",label:"Under £20 a head",sub:"Street food energy"},
-    {emoji:"💛",label:"£20–40 a head",sub:"Solid restaurant, BYO maybe"},
-    {emoji:"🧡",label:"£40–70 a head",sub:"Proper evening out"},
-    {emoji:"❤️",label:"Whatever it takes",sub:"Money is no object tonight"}
-  ]}
+// ── SEED DATA ──
+const seedVenues = [
+  // RESTAURANTS
+  {id:'r1',name:'Mildreds',area:'Central London',neighbourhood:'Soho',type:'restaurant',cuisine:'Global Vegetarian',rating:4.7,price_level:2,cost:'20-40',desc:'The OG London veggie institution. Buzzing, colourful, a menu that tours the world. No reservations — arrive ready.',tags:['No bookings','Cocktails','Vegan options'],maps_url:'https://maps.google.com/?q=Mildreds+Soho',photo:null},
+  {id:'r2',name:'Ottolenghi',area:'North London',neighbourhood:'Islington',type:'restaurant',cuisine:'Mediterranean',rating:4.9,price_level:3,cost:'40-70',desc:'Yotam\'s original. The counter of salads alone is worth the trip. Vibrant, generous, abundantly gorgeous food.',tags:['Legendary','Brunch','Take-home'],maps_url:'https://maps.google.com/?q=Ottolenghi+Islington',photo:null},
+  {id:'r3',name:'Ganapati',area:'South London',neighbourhood:'Peckham',type:'restaurant',cuisine:'South Indian',rating:4.8,price_level:2,cost:'20-40',desc:'Tiny, beloved, extraordinary South Indian cooking. The dosas are legendary. Book weeks ahead.',tags:['Book ahead','Dosas','BYOB'],maps_url:'https://maps.google.com/?q=Ganapati+Peckham',photo:null},
+  {id:'r4',name:'Mao Chow',area:'East London',neighbourhood:'Hackney',type:'restaurant',cuisine:'Vegan Chinese',rating:4.7,price_level:1,cost:'under20',desc:'Vegan Chinese that actually slaps. No compromises, no sad substitutes — just bold punchy flavours.',tags:['Budget-friendly','Dumplings','Vegan'],maps_url:'https://maps.google.com/?q=Mao+Chow+Hackney',photo:null},
+  {id:'r5',name:'Vanilla Black',area:'Central London',neighbourhood:'Chancery Lane',type:'restaurant',cuisine:'Modern Vegetarian',rating:4.8,price_level:3,cost:'40-70',desc:'Fine dining without the meat. Innovative seasonal tasting menus in a refined setting.',tags:['Fine dining','Tasting menu','Special occasion'],maps_url:'https://maps.google.com/?q=Vanilla+Black+London',photo:null},
+  {id:'r6',name:'Salon',area:'South London',neighbourhood:'Brixton',type:'restaurant',cuisine:'Modern British',rating:4.8,price_level:3,cost:'40-70',desc:'Intimate upstairs dining above Brixton Village. Seasonal tasting menu, natural wines. A real discovery.',tags:['Tasting menu','Natural wine','Intimate'],maps_url:'https://maps.google.com/?q=Salon+Brixton',photo:null},
+  {id:'r7',name:'The Gate',area:'Central London',neighbourhood:'Covent Garden',type:'restaurant',cuisine:'Fine Vegetarian',rating:4.6,price_level:3,cost:'40-70',desc:'Sophisticated without being stuffy. The kind of place you take someone to prove plant-based can be exceptional.',tags:['Romantic','Award-winning','Business dinner'],maps_url:'https://maps.google.com/?q=The+Gate+Covent+Garden',photo:null},
+  {id:'r8',name:'Rasa',area:'North London',neighbourhood:'Stoke Newington',type:'restaurant',cuisine:'Keralan',rating:4.7,price_level:2,cost:'20-40',desc:'Legendary Keralan cooking on the high street. The thali is a feast. Warm, family-run, deeply special.',tags:['Keralan','Thali','BYOB'],maps_url:'https://maps.google.com/?q=Rasa+Stoke+Newington',photo:null},
+  // CAFES
+  {id:'c1',name:'Redemption Bar',area:'West London',neighbourhood:'Notting Hill',type:'cafe',cuisine:'Vegan Café',rating:4.5,price_level:2,cost:'20-40',desc:'Alcohol-free, fully vegan café with amazing brunch and cocktails. No compromises on taste.',tags:['Brunch','Alcohol-free','Vegan'],maps_url:'https://maps.google.com/?q=Redemption+Bar+Notting+Hill',photo:null},
+  {id:'c2',name:'Wild Food Café',area:'Central London',neighbourhood:'Covent Garden',type:'cafe',cuisine:'Raw & Wholefood',rating:4.4,price_level:2,cost:'20-40',desc:'Raw, organic, and genuinely nourishing. The smoothie bowls are works of art.',tags:['Raw food','Organic','Smoothies'],maps_url:'https://maps.google.com/?q=Wild+Food+Cafe+Covent+Garden',photo:null},
+  // MARKETS
+  {id:'m1',name:'Borough Market',area:'Central London',neighbourhood:'London Bridge',type:'market',cuisine:'Food Market',rating:4.8,price_level:2,cost:'under20',desc:'London\'s greatest food market. Dozens of vegetarian and vegan stalls. Go hungry, leave euphoric.',tags:['Weekend','Street food','Produce'],maps_url:'https://maps.google.com/?q=Borough+Market+London',photo:null},
+  {id:'m2',name:'Broadway Market',area:'East London',neighbourhood:'Hackney',type:'market',cuisine:'Street Food Market',rating:4.7,price_level:1,cost:'under20',desc:'Saturday market with brilliant vegan street food, artisan bread and community energy.',tags:['Saturday only','Artisan','Community'],maps_url:'https://maps.google.com/?q=Broadway+Market+Hackney',photo:null},
+  {id:'m3',name:'Maltby Street Market',area:'South London',neighbourhood:'Bermondsey',type:'market',cuisine:'Artisan Market',rating:4.6,price_level:2,cost:'under20',desc:'The insider alternative to Borough. Smaller, more local, less crowded. Weekend mornings only.',tags:['Weekend','Hidden gem','Artisan'],maps_url:'https://maps.google.com/?q=Maltby+Street+Market',photo:null},
+  {id:'m4',name:'Brixton Village',area:'South London',neighbourhood:'Brixton',type:'market',cuisine:'Market & Restaurants',rating:4.7,price_level:2,cost:'under20',desc:'A covered market full of incredible independent restaurants. Vegan Sri Lankan, Ethiopian, more.',tags:['Covered market','Diverse','Evening'],maps_url:'https://maps.google.com/?q=Brixton+Village+Market',photo:null},
+  {id:'m5',name:'Portobello Road Market',area:'West London',neighbourhood:'Notting Hill',type:'market',cuisine:'Street Market',rating:4.5,price_level:1,cost:'under20',desc:'Famous street market with food stalls, antiques and great vegan snacks every Saturday.',tags:['Saturday','Antiques','Tourist favourite'],maps_url:'https://maps.google.com/?q=Portobello+Road+Market',photo:null},
 ];
 
-const areaCoords = {
-  0:{lat:51.5234,lng:-0.0735,name:"East London"},
-  1:{lat:51.5130,lng:-0.1290,name:"Central London"},
-  2:{lat:51.5390,lng:-0.1027,name:"North London"},
-  3:{lat:51.4613,lng:-0.1156,name:"South London"}
-};
-
-const rankLabels = ["Top Pick","Hidden Gem","Local Favourite"];
-const vibes = [
-  ["Earthy and warm — every dish feels genuinely cared for.","Wholesome, nourishing, the kind of place regulars guard like a secret.","Natural and deeply satisfying in equal measure."],
-  ["Sleek and design-forward — great food in a beautiful space.","Style and substance in equal measure, with food that photographs as well as it tastes.","The kind of place that makes a strong first impression and delivers on it."],
-  ["A proper neighbourhood favourite with serious local loyalty.","Cosy and intimate — you'll feel like a regular from the first visit.","Unpretentious but exceptional. A genuine local gem."],
-  ["Bold global flavours that take you somewhere else entirely.","An adventure on a plate — exciting, vibrant, and deeply satisfying.","International inspiration done with real craft and care."]
-];
-
-const fallbackData = {
-  0:[
-    {place_id:"ml_e1",name:"Mao Chow",area:"Hackney",rating:"4.7",maps_url:"https://maps.google.com/?q=Mao+Chow+Hackney",price_level:1},
-    {place_id:"ml_e2",name:"Plates",area:"Shoreditch",rating:"4.6",maps_url:"https://maps.google.com/?q=Plates+London+E1",price_level:3},
-    {place_id:"ml_e3",name:"Farmacy",area:"Bethnal Green",rating:"4.8",maps_url:"https://maps.google.com/?q=Farmacy+London",price_level:2}
-  ],
-  1:[
-    {place_id:"ml_c1",name:"Mildreds",area:"Soho",rating:"4.7",maps_url:"https://maps.google.com/?q=Mildreds+Soho+London",price_level:2},
-    {place_id:"ml_c2",name:"The Gate",area:"Covent Garden",rating:"4.6",maps_url:"https://maps.google.com/?q=The+Gate+Covent+Garden",price_level:3},
-    {place_id:"ml_c3",name:"Vanilla Black",area:"Chancery Lane",rating:"4.8",maps_url:"https://maps.google.com/?q=Vanilla+Black+London",price_level:3}
-  ],
-  2:[
-    {place_id:"ml_n1",name:"Ottolenghi",area:"Islington",rating:"4.9",maps_url:"https://maps.google.com/?q=Ottolenghi+Islington",price_level:3},
-    {place_id:"ml_n2",name:"Stem & Glory",area:"Camden",rating:"4.6",maps_url:"https://maps.google.com/?q=Stem+Glory+Camden",price_level:2},
-    {place_id:"ml_n3",name:"Rasa",area:"Stoke Newington",rating:"4.7",maps_url:"https://maps.google.com/?q=Rasa+Stoke+Newington",price_level:2}
-  ],
-  3:[
-    {place_id:"ml_s1",name:"Ganapati",area:"Peckham",rating:"4.8",maps_url:"https://maps.google.com/?q=Ganapati+Peckham",price_level:2},
-    {place_id:"ml_s2",name:"Salon",area:"Brixton",rating:"4.8",maps_url:"https://maps.google.com/?q=Salon+Brixton+Village",price_level:3},
-    {place_id:"ml_s3",name:"Burnt Garlic",area:"Brixton Market",rating:"4.7",maps_url:"https://maps.google.com/?q=Burnt+Garlic+Brixton",price_level:1}
-  ]
-};
+const badgeMap = {restaurant:{label:'Restaurant',cls:'badge-green'},cafe:{label:'Café',cls:'badge-green'},market:{label:'Market 🛍️',cls:'badge-orange'},popup:{label:'Pop-up',cls:'badge-purple'},takeaway:{label:'Takeaway',cls:'badge-green'},bar:{label:'Bar',cls:'badge-purple'}};
+const costMap  = {'under20':'Under £20 for 2','20-40':'£20–40 for 2','40-70':'£40–70 for 2','70plus':'£70+ for 2'};
+const priceMap = ['','£','££','£££','££££'];
 
 // ── INIT ──
 async function init() {
-  const { data:{ session } } = await sb.auth.getSession();
-  if (session) { currentUser = session.user; await loadFavourites(); showIntro(); }
+  const {data:{session}} = await sb.auth.getSession();
+  if (session) { currentUser = session.user; await loadFavourites(); }
+  allVenues = seedVenues;
+  showHome();
+  renderVenues(allVenues);
 }
 
 // ── AUTH ──
-function switchTab(tab) {
-  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
-  document.getElementById('tabSignup').classList.toggle('active', tab==='signup');
-  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
-  document.getElementById('signupForm').style.display = tab==='signup'?'block':'none';
-  document.getElementById('authError').textContent = '';
+async function handleGoogleLogin() {
+  const {error} = await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:APP_URL}});
+  if (error) document.getElementById('authError').textContent = error.message;
 }
-
+function switchTab(t) {
+  document.getElementById('tabLogin').classList.toggle('active',t==='login');
+  document.getElementById('tabSignup').classList.toggle('active',t==='signup');
+  document.getElementById('loginForm').style.display=t==='login'?'block':'none';
+  document.getElementById('signupForm').style.display=t==='signup'?'block':'none';
+}
 async function handleLogin() {
-  const email = document.getElementById('loginEmail').value;
-  const pass  = document.getElementById('loginPassword').value;
-  const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
-  if (error) { document.getElementById('authError').textContent = error.message; return; }
-  currentUser = data.user;
-  await loadFavourites();
-  showToast('👋 Welcome back!');
-  showIntro();
+  const {data,error}=await sb.auth.signInWithPassword({email:document.getElementById('loginEmail').value,password:document.getElementById('loginPassword').value});
+  if(error){document.getElementById('authError').textContent=error.message;return;}
+  currentUser=data.user; await loadFavourites(); showToast('👋 Welcome back!'); showHome();
 }
-
 async function handleSignup() {
-  const email = document.getElementById('signupEmail').value;
-  const pass  = document.getElementById('signupPassword').value;
-  const {data,error} = await sb.auth.signUp({email,password:pass});
-  if (error) { document.getElementById('authError').textContent = error.message; return; }
-  currentUser = data.user;
-  showToast('✅ Account created! Welcome to Sprout 🌿');
-  showIntro();
+  const {data,error}=await sb.auth.signUp({email:document.getElementById('signupEmail').value,password:document.getElementById('signupPassword').value});
+  if(error){document.getElementById('authError').textContent=error.message;return;}
+  currentUser=data.user; showToast('✅ Welcome to Sprout 🌿'); showHome();
 }
-
 async function handleSignout() {
-  await sb.auth.signOut();
-  currentUser = null; favourites = [];
-  hideAllScreens();
-  document.getElementById('authScreen').classList.add('active');
+  await sb.auth.signOut(); currentUser=null; favourites=[];
+  hideAll(); document.getElementById('authScreen').classList.add('active');
+}
+function guestMode() { showHome(); }
+
+// ── NAVIGATION ──
+function hideAll() { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); }
+function showHome() {
+  hideAll(); document.getElementById('homeScreen').classList.add('active');
+  updateNav(); applyFilters();
+}
+function goToQuiz() {
+  hideAll(); document.getElementById('quizScreen').classList.add('active');
+  currentQ=0; answers={}; buildProgressDots(); showQuestion(0);
+}
+function updateNav() {
+  document.getElementById('navUser').textContent = currentUser?currentUser.email?.split('@')[0]:'';
+  document.getElementById('navSignout').style.display = currentUser?'inline':'none';
 }
 
-function guestMode() { showIntro(); }
-
-function showIntro() {
-  hideAllScreens();
-  const el = document.getElementById('intro');
-  el.style.display = 'flex'; el.classList.remove('hide');
-  updateNav();
+// ── SEARCH & FILTERS ──
+function doSearch() {
+  activeQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+  applyFilters();
 }
-
-function hideAllScreens() {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const intro = document.getElementById('intro');
-  intro.style.display = 'none';
+function setTypeFilter(type, btn) {
+  activeTypeFilter = type;
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
 }
-
-// ── FAVOURITES ──
-async function loadFavourites() {
-  if (!currentUser) return;
-  const {data} = await sb.from('favourites').select('*').eq('user_id', currentUser.id);
-  favourites = data || [];
+function setAreaFilter(area, btn) {
+  activeAreaFilter = area;
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
 }
+function applyFilters() {
+  const minRating = parseFloat(document.getElementById('ratingFilter')?.value||0);
+  const cost      = document.getElementById('costFilter')?.value||'all';
+  const sort      = document.getElementById('sortFilter')?.value||'rating';
 
-async function toggleFavourite(r) {
-  if (!currentUser) { showToast('Sign in to save favourites 💚'); return; }
-  const ex = favourites.find(f => f.place_id === r.place_id);
-  if (ex) {
-    await sb.from('favourites').delete().eq('id', ex.id);
-    favourites = favourites.filter(f => f.place_id !== r.place_id);
-    showToast('Removed from saved spots');
-  } else {
-    const {data} = await sb.from('favourites').insert({
-      user_id:currentUser.id, place_id:r.place_id,
-      name:r.name, area:r.area, rating:r.rating, maps_url:r.maps_url
-    }).select().single();
-    if (data) favourites.push(data);
-    showToast('❤️ Saved!');
-  }
-  refreshFavBtns();
-}
-
-function refreshFavBtns() {
-  document.querySelectorAll('.fav-btn').forEach(btn => {
-    const pid = btn.dataset.pid;
-    const saved = !!favourites.find(f => f.place_id === pid);
-    btn.classList.toggle('saved', saved);
-    btn.textContent = saved ? '❤️' : '🤍';
-  });
-}
-
-function openFavs() { renderFavsList(); document.getElementById('favsPanel').classList.add('active'); }
-function closeFavs() { document.getElementById('favsPanel').classList.remove('active'); }
-function closeFavsOutside(e) { if (e.target===document.getElementById('favsPanel')) closeFavs(); }
-
-function renderFavsList() {
-  const el = document.getElementById('favsList');
-  if (!currentUser) { el.innerHTML='<div class="favs-empty">Sign in to save your favourite spots 🌿</div>'; return; }
-  if (!favourites.length) { el.innerHTML='<div class="favs-empty">No saved spots yet.<br>Heart a restaurant to save it here!</div>'; return; }
-  el.innerHTML = favourites.map(f=>`
-    <div class="fav-item">
-      <div style="font-size:2rem">🌿</div>
-      <div class="fav-item-info">
-        <div class="fav-item-name">${f.name}</div>
-        <div class="fav-item-area">📍 ${f.area}${f.rating?' · ⭐ '+f.rating:''}</div>
-      </div>
-      <button class="fav-remove" onclick="removeFav('${f.place_id}')">✕</button>
-    </div>`).join('');
-}
-
-async function removeFav(pid) {
-  const fav = favourites.find(f=>f.place_id===pid);
-  if (!fav) return;
-  await sb.from('favourites').delete().eq('id', fav.id);
-  favourites = favourites.filter(f=>f.place_id!==pid);
-  renderFavsList(); refreshFavBtns();
-  showToast('Removed');
-}
-
-// ── QUIZ ──
-function startQuiz() {
-  const intro = document.getElementById('intro');
-  intro.classList.add('hide');
-  setTimeout(()=>{
-    intro.style.display='none';
-    document.getElementById('quiz').classList.add('active');
-    currentQ=0; answers={};
-    buildProgressDots(); showQuestion(0); updateNav();
-  }, 800);
-}
-
-function buildProgressDots() {
-  const wrap = document.getElementById('progressDots');
-  wrap.innerHTML = questions.map((_,i)=>`<div class="progress-dot${i===0?' active':''}" id="dot-${i}"></div>`).join('');
-}
-
-function updateDots(idx) {
-  questions.forEach((_,i)=>{
-    const d=document.getElementById(`dot-${i}`);
-    if(d) d.className='progress-dot'+(i<idx?' done':i===idx?' active':'');
-  });
-}
-
-function showQuestion(idx) {
-  const q = questions[idx];
-  document.getElementById('questionStage').innerHTML=`
-    <div class="q-card">
-      <div class="q-number">Question ${idx+1} of ${questions.length}</div>
-      <div class="q-text">${q.text}</div>
-      <div class="options-grid">
-        ${q.options.map((o,i)=>`
-          <button class="option-btn" onclick="pick('${q.id}',${i},this)">
-            <span class="opt-emoji">${o.emoji}</span>
-            <span class="opt-label">${o.label}</span>
-            <span class="opt-sub">${o.sub}</span>
-          </button>`).join('')}
-      </div>
-    </div>`;
-}
-
-function pick(qid, idx, btn) {
-  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  answers[qid]=idx;
-  setTimeout(()=>{
-    currentQ++;
-    if(currentQ<questions.length){updateDots(currentQ);showQuestion(currentQ);}
-    else startLoading();
-  },400);
-}
-
-// ── FETCH PLACES ──
-async function fetchPlaces() {
-  const area = areaCoords[answers.neighbourhood]||areaCoords[1];
-  const q    = `vegetarian restaurant ${area.name} London`;
-  const url  = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&key=${GOOGLE_KEY}`;
-  try {
-    const res  = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-    const data = await res.json();
-    if (data.results?.length) {
-      return data.results.slice(0,3).map((p,i)=>({
-        place_id: p.place_id,
-        name: p.name,
-        area: p.formatted_address?.split(',')[1]?.trim()||area.name,
-        rating: p.rating?.toFixed(1)||'N/A',
-        maps_url: `https://www.google.com/maps/place/?q=place_id:${p.place_id}`,
-        photo_ref: p.photos?.[0]?.photo_reference||null,
-        price_level: p.price_level||2,
-        rank: rankLabels[i],
-        vibe: (vibes[answers.vibe]||vibes[0])[i]
-      }));
+  let results = allVenues.filter(v => {
+    if (activeTypeFilter !== 'all' && v.type !== activeTypeFilter) return false;
+    if (activeAreaFilter !== 'all' && v.area !== activeAreaFilter) return false;
+    if (minRating > 0 && v.rating < minRating) return false;
+    if (cost !== 'all' && v.cost !== cost) return false;
+    if (activeQuery) {
+      const q = activeQuery;
+      const match = v.name.toLowerCase().includes(q) || v.area.toLowerCase().includes(q) ||
+        v.neighbourhood.toLowerCase().includes(q) || v.cuisine.toLowerCase().includes(q) ||
+        v.desc.toLowerCase().includes(q) || (v.tags||[]).some(t=>t.toLowerCase().includes(q));
+      if (!match) return false;
     }
-  } catch(e){console.warn('Places fetch failed, using fallback');}
-  return (fallbackData[answers.neighbourhood]||fallbackData[1]).map((r,i)=>({
-    ...r, rank:rankLabels[i], photo_ref:null, vibe:(vibes[answers.vibe]||vibes[0])[i]
-  }));
-}
-
-function photoUrl(ref) {
-  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${ref}&key=${GOOGLE_KEY}`;
-}
-function priceLabel(n){ return ['','£','££','£££','££££'][n]||'££'; }
-
-// ── RESULTS ──
-function startLoading() {
-  document.getElementById('quiz').classList.remove('active');
-  document.getElementById('loading').classList.add('active');
-  const msgs=['Scanning London…','Checking the vibe…','Curating your picks…'];
-  let mi=0;
-  const iv=setInterval(()=>{document.getElementById('loadingText').textContent=msgs[++mi%msgs.length];},900);
-  fetchPlaces().then(rs=>{
-    clearInterval(iv);
-    currentRestaurants=rs;
-    setTimeout(()=>{document.getElementById('loading').classList.remove('active');showResults(rs);},400);
+    return true;
   });
+
+  if (sort === 'rating') results.sort((a,b)=>b.rating-a.rating);
+  else results.sort((a,b)=>a.name.localeCompare(b.name));
+
+  const title = activeQuery ? `Results for "${activeQuery}"` : activeTypeFilter==='market'?'Food Markets':activeTypeFilter==='cafe'?'Cafés':activeTypeFilter==='restaurant'?'Restaurants':'All venues';
+  document.getElementById('sectionTitle').textContent = title;
+  document.getElementById('sectionCount').textContent = `${results.length} spot${results.length!==1?'s':''}`;
+
+  renderVenues(results);
 }
 
-function showResults(rs) {
-  const labels=["a couple's night out","date night","a night out with friends","a solo evening","a work dinner"];
-  const area  = areaCoords[answers.neighbourhood]||areaCoords[1];
-  document.getElementById('resultsTitle').textContent=`Perfect for ${labels[answers.occasion]||'tonight'}.`;
-  document.getElementById('resultsSub').textContent=`3 spots we'd genuinely send you to in ${area.name}.`;
-
-  document.getElementById('restaurantsList').innerHTML = rs.map((r,i)=>{
-    const saved = !!favourites.find(f=>f.place_id===r.place_id);
-    const img   = r.photo_ref ? `<img src="${photoUrl(r.photo_ref)}" alt="${r.name}" loading="lazy" onerror="this.style.display='none'">` : '';
+// ── RENDER ──
+function renderVenues(venues) {
+  const grid = document.getElementById('resultsGrid');
+  if (!venues.length) {
+    grid.innerHTML=`<div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <p>No spots found matching your search.<br>Know a great place we're missing?</p>
+      <button class="empty-state-btn" onclick="openAddVenue()">+ Add a venue</button>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = venues.map((v,i)=>{
+    const saved=!!favourites.find(f=>f.place_id===v.id);
+    const badge=badgeMap[v.type]||badgeMap.restaurant;
     return `
-    <div class="restaurant-card">
+    <div class="restaurant-card" style="animation-delay:${i*0.06}s">
       <div class="card-image-wrap">
-        ${img}
-        ${!r.photo_ref?'<div class="card-placeholder">🌿</div>':''}
-        <div class="card-rank">${r.rank}</div>
-        ${r.rating!=='N/A'?`<div class="card-rating-badge">⭐ ${r.rating}</div>`:''}
+        ${v.photo?`<img src="${v.photo}" alt="${v.name}" loading="lazy" onerror="this.style.display='none'">`:
+          `<div class="card-placeholder">${v.type==='market'?'🛍️':v.type==='cafe'?'☕':'🌿'}</div>`}
+        <div class="card-badge ${badge.cls}">${badge.label}</div>
+        ${v.rating?`<div class="card-rating-badge">⭐ ${v.rating}</div>`:''}
       </div>
       <div class="card-body">
-        <div class="card-cuisine">Vegetarian · ${area.name}</div>
-        <div class="card-name">${r.name}</div>
-        <div class="card-area">📍 ${r.area}</div>
-        <div class="card-vibe">"${r.vibe}"</div>
+        <div class="card-type-row">
+          <span class="card-type">${v.cuisine}</span>
+          <span class="card-dot">●</span>
+          <span class="card-area-small">📍 ${v.neighbourhood}</span>
+        </div>
+        <div class="card-name">${v.name}</div>
+        <div class="card-desc">"${v.desc}"</div>
+        <div class="card-tags">${(v.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
         <div class="card-footer">
-          <span class="card-price">${priceLabel(r.price_level)}</span>
+          <div class="card-meta">
+            <span class="card-price">${priceMap[v.price_level]||'££'}</span>
+            ${v.cost?`<span class="card-cost">· ${costMap[v.cost]||''}</span>`:''}
+          </div>
           <div class="card-actions">
-            <button class="fav-btn ${saved?'saved':''}" data-pid="${r.place_id}" onclick="toggleFavourite(currentRestaurants[${i}])">${saved?'❤️':'🤍'}</button>
-            <a class="maps-btn" href="${r.maps_url}" target="_blank" rel="noopener">View on Maps →</a>
+            <button class="fav-btn ${saved?'saved':''}" data-pid="${v.id}" onclick="toggleFav(allVenues.find(x=>x.id==='${v.id}'))">${saved?'❤️':'🤍'}</button>
+            <a class="maps-btn" href="${v.maps_url}" target="_blank" rel="noopener">View →</a>
           </div>
         </div>
       </div>
     </div>`;
   }).join('');
-
-  document.getElementById('results').classList.add('active');
-  updateNav();
-  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function updateNav() {
-  ['navUser','navUser2'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.textContent=currentUser?currentUser.email?.split('@')[0]:'';
+// ── FAVOURITES ──
+async function loadFavourites() {
+  if (!currentUser) return;
+  const {data}=await sb.from('favourites').select('*').eq('user_id',currentUser.id);
+  favourites=data||[];
+}
+async function toggleFav(v) {
+  if (!v) return;
+  if (!currentUser) { showToast('Sign in to save favourites 💚'); return; }
+  const ex=favourites.find(f=>f.place_id===v.id);
+  if (ex) {
+    await sb.from('favourites').delete().eq('id',ex.id);
+    favourites=favourites.filter(f=>f.place_id!==v.id);
+    showToast('Removed');
+  } else {
+    const {data}=await sb.from('favourites').insert({user_id:currentUser.id,place_id:v.id,name:v.name,area:v.neighbourhood,rating:v.rating?.toString(),maps_url:v.maps_url}).select().single();
+    if(data) favourites.push(data);
+    showToast('❤️ Saved!');
+  }
+  document.querySelectorAll('.fav-btn').forEach(btn=>{
+    const pid=btn.dataset.pid;
+    const s=!!favourites.find(f=>f.place_id===pid);
+    btn.classList.toggle('saved',s); btn.textContent=s?'❤️':'🤍';
   });
-  ['navSignout','navSignout2'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display=currentUser?'inline':'none';
-  });
+}
+function openFavs(){renderFavsList();document.getElementById('favsPanel').classList.add('active');}
+function closeFavs(){document.getElementById('favsPanel').classList.remove('active');}
+function closeFavsOutside(e){if(e.target===document.getElementById('favsPanel'))closeFavs();}
+function renderFavsList(){
+  const el=document.getElementById('favsList');
+  if(!currentUser){el.innerHTML='<div class="favs-empty">Sign in to save your favourite spots 🌿</div>';return;}
+  if(!favourites.length){el.innerHTML='<div class="favs-empty">No saved spots yet.<br>Heart a venue to save it!</div>';return;}
+  el.innerHTML=favourites.map(f=>`
+    <div class="fav-item">
+      <div style="font-size:1.8rem">🌿</div>
+      <div class="fav-item-info"><div class="fav-item-name">${f.name}</div><div class="fav-item-area">📍 ${f.area}${f.rating?' · ⭐ '+f.rating:''}</div></div>
+      <button class="fav-remove" onclick="removeFav('${f.place_id}')">✕</button>
+    </div>`).join('');
+}
+async function removeFav(pid){
+  const fav=favourites.find(f=>f.place_id===pid);
+  if(!fav)return;
+  await sb.from('favourites').delete().eq('id',fav.id);
+  favourites=favourites.filter(f=>f.place_id!==pid);
+  renderFavsList();
+  document.querySelectorAll('.fav-btn').forEach(btn=>{if(btn.dataset.pid===pid){btn.classList.remove('saved');btn.textContent='🤍';}});
+  showToast('Removed');
 }
 
-function restart() {
-  currentQ=0; answers={};
-  document.getElementById('results').classList.remove('active');
-  document.getElementById('quiz').classList.add('active');
-  buildProgressDots(); showQuestion(0);
-  window.scrollTo({top:0,behavior:'smooth'});
+// ── ADD VENUE ──
+function openAddVenue(){document.getElementById('addVenueModal').classList.add('active');}
+function closeAddVenue(){document.getElementById('addVenueModal').classList.remove('active');}
+function closeModalOutside(e){if(e.target===document.getElementById('addVenueModal'))closeAddVenue();}
+async function submitVenue(){
+  const name=document.getElementById('venueName').value.trim();
+  const area=document.getElementById('venueArea').value.trim();
+  if(!name||!area){showToast('Please fill in at least name and area');return;}
+  const venue={
+    name, area, type:document.getElementById('venueType').value,
+    address:document.getElementById('venueAddress').value,
+    cuisine:document.getElementById('venueCuisine').value,
+    cost:document.getElementById('venueCost').value,
+    desc:document.getElementById('venueDesc').value,
+    maps_url:document.getElementById('venueMaps').value,
+    submitter:document.getElementById('venueSubmitter').value,
+    status:'pending', submitted_at: new Date().toISOString()
+  };
+  try {
+    await sb.from('venue_submissions').insert(venue);
+  } catch(e){ console.log('Submissions table not set up yet — logged locally'); }
+  closeAddVenue();
+  showToast('🌱 Thanks! We\'ll review your submission within 48hrs');
+  ['venueName','venueArea','venueAddress','venueCuisine','venueDesc','venueMaps','venueSubmitter'].forEach(id=>{document.getElementById(id).value='';});
 }
 
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
+// ── QUIZ ──
+const questions=[
+  {id:"occasion",text:"What's <em>tonight</em> actually about?",options:[{emoji:"💑",label:"Couple's night out",sub:"Just the two of us"},{emoji:"🕯️",label:"A proper date night",sub:"Romantic, candlelit"},{emoji:"👯",label:"Out with friends",sub:"Loud, fun, groups"},{emoji:"🧘",label:"Solo reset",sub:"Quiet table, good book"},{emoji:"💼",label:"Work dinner",sub:"Relaxed but presentable"}]},
+  {id:"vibe",text:"Pick the <em>feeling</em> you're after",options:[{emoji:"🌿",label:"Earthy & wholesome",sub:"Natural, nourishing"},{emoji:"✨",label:"Sleek & stylish",sub:"Great lighting, aesthetic"},{emoji:"🏡",label:"Neighbourhood gem",sub:"Locals only energy"},{emoji:"🌍",label:"Global flavours",sub:"Indian, Middle Eastern, Asian"}]},
+  {id:"neighbourhood",text:"Which part of <em>London</em>?",options:[{emoji:"🗺️",label:"East London",sub:"Shoreditch, Hackney"},{emoji:"🏛️",label:"Central London",sub:"Soho, Covent Garden"},{emoji:"🌳",label:"North London",sub:"Islington, Camden"},{emoji:"🌉",label:"South London",sub:"Brixton, Peckham"}]},
+  {id:"hunger",text:"How <em>hungry</em> are you?",options:[{emoji:"🍽️",label:"Full sit-down meal",sub:"Starter, main, dessert"},{emoji:"🥙",label:"Casual & quick",sub:"Satisfying, no fuss"},{emoji:"🍷",label:"Drinks & bites",sub:"Grazing, conversation"},{emoji:"🎂",label:"It's a celebration",sub:"Pull out all stops"}]},
+  {id:"budget",text:"What's the <em>budget</em>?",options:[{emoji:"💚",label:"Under £20 a head",sub:"Street food energy"},{emoji:"💛",label:"£20–40 a head",sub:"Solid night out"},{emoji:"🧡",label:"£40–70 a head",sub:"Proper evening"},{emoji:"❤️",label:"Whatever it takes",sub:"No object tonight"}]}
+];
+const areaMap={0:'East London',1:'Central London',2:'North London',3:'South London'};
+
+function buildProgressDots(){
+  document.getElementById('progressDots').innerHTML=questions.map((_,i)=>`<div class="progress-dot${i===0?' active':''}" id="dot-${i}"></div>`).join('');
 }
+function updateDots(idx){questions.forEach((_,i)=>{const d=document.getElementById(`dot-${i}`);if(d)d.className='progress-dot'+(i<idx?' done':i===idx?' active':'');});}
+function showQuestion(idx){
+  const q=questions[idx];
+  document.getElementById('questionStage').innerHTML=`
+    <div class="q-card">
+      <div class="q-number">Question ${idx+1} of ${questions.length}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="options-grid">
+        ${q.options.map((o,i)=>`<button class="option-btn" onclick="pick('${q.id}',${i},this)"><span class="opt-emoji">${o.emoji}</span><span class="opt-label">${o.label}</span><span class="opt-sub">${o.sub}</span></button>`).join('')}
+      </div>
+      <div class="skip-quiz-wrap"><button class="skip-quiz-btn" onclick="showHome()">Skip — take me to search instead</button></div>
+    </div>`;
+}
+function pick(qid,idx,btn){
+  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected'); answers[qid]=idx;
+  setTimeout(()=>{
+    currentQ++;
+    if(currentQ<questions.length){updateDots(currentQ);showQuestion(currentQ);}
+    else applyQuizAnswers();
+  },400);
+}
+function applyQuizAnswers(){
+  const area=areaMap[answers.neighbourhood]||'Central London';
+  activeAreaFilter=area;
+  activeTypeFilter='restaurant';
+  // Set area chip
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.toggle('active',b.textContent.includes(area.split(' ')[0])));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.id==='tabRestaurants'));
+  showHome();
+  showToast(`🌿 Showing ${area} restaurants for you`);
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 
 init();
 </script>
