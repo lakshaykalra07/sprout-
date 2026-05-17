@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bitemap — London</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -541,7 +541,27 @@ const SB_KEY = 'sb_publishable_VihKP57OQc4ydpeXJEzUhA_xwK_QgWW';
 const GKEY   = 'AIzaSyB9ZfLPhwr-KTx1xjPu0BF3wFAgweftoXM';
 const APP    = 'https://sprout-gamma.vercel.app';
 
-const sb = supabase.createClient(SB_URL, SB_KEY);
+let sb;
+try {
+  sb = supabase.createClient(SB_URL, SB_KEY);
+} catch(e) {
+  console.log('Supabase failed to init:', e);
+  // Create a dummy sb object so nothing crashes
+  sb = {
+    auth: {
+      getSession: async () => ({ data: { session: null } }),
+      signInWithOAuth: async () => {},
+      signInWithPassword: async () => ({ data: null, error: { message: 'Auth unavailable' } }),
+      signUp: async () => ({ data: null, error: { message: 'Auth unavailable' } }),
+      signOut: async () => {}
+    },
+    from: () => ({
+      select: () => ({ eq: async () => ({ data: [] }) }),
+      insert: () => ({ select: () => ({ single: async () => ({ data: null }) }) }),
+      delete: () => ({ eq: async () => ({}) })
+    })
+  };
+}
 
 let user = null;
 let favs = [];
@@ -565,20 +585,20 @@ const venues = [
   {id:'r8',name:'Bao Borough',area:'Central London',hood:'Borough',type:'restaurant',cuisine:'Taiwanese',diet:['vegetarian'],rating:4.8,pl:2,cost:'20-40',desc:'Tiny, iconic, extraordinary. The bao are clouds of perfection. Queue fast, eat slowly.',tags:['Bao','Taiwanese','Asian','Small plates'],maps:'https://maps.google.com/?q=Bao+Borough'},
   {id:'r9',name:'Brigadiers',area:'Central London',hood:'Bank',type:'restaurant',cuisine:'Indian BBQ',diet:[],rating:4.7,pl:3,cost:'40-70',desc:'Indian BBQ meets sports bar. Incredible kebabs and craft beer in a beautiful space.',tags:['Indian','BBQ','Kebab','Curry'],maps:'https://maps.google.com/?q=Brigadiers+London'},
   {id:'r10',name:'Kanada-Ya',area:'Central London',hood:'Covent Garden',type:'restaurant',cuisine:'Japanese Ramen',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Tonkotsu ramen perfectionists. The 18-hour broth is rich, complex and deeply satisfying.',tags:['Ramen','Japanese','Tonkotsu','Noodles'],maps:'https://maps.google.com/?q=Kanada-Ya+London'},
-  {id:'r11',name:'Tonkotsu',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Japanese Ramen',diet:[],rating:4.6,pl:2,cost:'20-40',desc:'London's beloved ramen originals. The Soho spot is still the best of the bunch.',tags:['Ramen','Japanese','Tonkotsu','Noodles'],maps:'https://maps.google.com/?q=Tonkotsu+Soho'},
+  {id:'r11',name:'Tonkotsu',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Japanese Ramen',diet:[],rating:4.6,pl:2,cost:'20-40',desc:'London\'s beloved ramen originals. The Soho spot is still the best of the bunch.',tags:['Ramen','Japanese','Tonkotsu','Noodles'],maps:'https://maps.google.com/?q=Tonkotsu+Soho'},
   {id:'r12',name:'Flat Iron',area:'Central London',hood:'Covent Garden',type:'restaurant',cuisine:'Steak',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'The cult steak restaurant. One cut, done perfectly, at prices that seem impossible.',tags:['Steak','British','Covent Garden'],maps:'https://maps.google.com/?q=Flat+Iron+Covent+Garden'},
-  {id:'r13',name:'Hawksmoor',area:'Central London',hood:'Seven Dials',type:'restaurant',cuisine:'British Steak',diet:[],rating:4.8,pl:4,cost:'70plus',desc:'Britain's finest steakhouse. British beef, exceptional cocktails, beautiful rooms.',tags:['Steak','British','Cocktails','Special occasion'],maps:'https://maps.google.com/?q=Hawksmoor+Seven+Dials'},
-  {id:'r14',name:'Patty & Bun',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Burgers',diet:[],rating:4.6,pl:1,cost:'under20',desc:'London's most acclaimed burger. The Ari Gold with smoky mayo is a masterpiece.',tags:['Burger','American','Fast casual','Soho'],maps:'https://maps.google.com/?q=Patty+and+Bun+Soho'},
+  {id:'r13',name:'Hawksmoor',area:'Central London',hood:'Seven Dials',type:'restaurant',cuisine:'British Steak',diet:[],rating:4.8,pl:4,cost:'70plus',desc:'Britain\'s finest steakhouse. British beef, exceptional cocktails, beautiful rooms.',tags:['Steak','British','Cocktails','Special occasion'],maps:'https://maps.google.com/?q=Hawksmoor+Seven+Dials'},
+  {id:'r14',name:'Patty & Bun',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Burgers',diet:[],rating:4.6,pl:1,cost:'under20',desc:'London\'s most acclaimed burger. The Ari Gold with smoky mayo is a masterpiece.',tags:['Burger','American','Fast casual','Soho'],maps:'https://maps.google.com/?q=Patty+and+Bun+Soho'},
   {id:'r15',name:'Bleecker Burger',area:'Central London',hood:'Bloomberg Arcade',type:'restaurant',cuisine:'Burgers',diet:[],rating:4.7,pl:1,cost:'under20',desc:'No-nonsense American-style smash burgers done with total conviction.',tags:['Burger','Smash burger','American'],maps:'https://maps.google.com/?q=Bleecker+Burger+Bloomberg'},
-  {id:'r16',name:'Pizza Pilgrims',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Neapolitan Pizza',diet:['vegetarian'],rating:4.6,pl:1,cost:'under20',desc:'Proper Neapolitan pizza from London's most passionate pizza missionaries.',tags:['Pizza','Neapolitan','Italian','Soho'],maps:'https://maps.google.com/?q=Pizza+Pilgrims+Soho'},
-  {id:'r17',name:'Sushi Tetsu',area:'Central London',hood:'Clerkenwell',type:'restaurant',cuisine:'Japanese Sushi',diet:[],rating:4.9,pl:4,cost:'70plus',desc:'One of London's finest sushi counters. Six seats, one chef, total perfection.',tags:['Sushi','Japanese','Omakase'],maps:'https://maps.google.com/?q=Sushi+Tetsu+London'},
+  {id:'r16',name:'Pizza Pilgrims',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Neapolitan Pizza',diet:['vegetarian'],rating:4.6,pl:1,cost:'under20',desc:'Proper Neapolitan pizza from London\'s most passionate pizza missionaries.',tags:['Pizza','Neapolitan','Italian','Soho'],maps:'https://maps.google.com/?q=Pizza+Pilgrims+Soho'},
+  {id:'r17',name:'Sushi Tetsu',area:'Central London',hood:'Clerkenwell',type:'restaurant',cuisine:'Japanese Sushi',diet:[],rating:4.9,pl:4,cost:'70plus',desc:'One of London\'s finest sushi counters. Six seats, one chef, total perfection.',tags:['Sushi','Japanese','Omakase'],maps:'https://maps.google.com/?q=Sushi+Tetsu+London'},
   {id:'r18',name:'Hoppers',area:'Central London',hood:'Soho',type:'restaurant',cuisine:'Sri Lankan',diet:['vegetarian'],rating:4.7,pl:2,cost:'20-40',desc:'Sri Lankan street food done brilliantly. The hoppers and karis are deeply addictive.',tags:['Sri Lankan','Indian','Curry','Hoppers'],maps:'https://maps.google.com/?q=Hoppers+London'},
   {id:'r19',name:'Barrafina',area:'Central London',hood:'Covent Garden',type:'restaurant',cuisine:'Spanish Tapas',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'The finest Spanish tapas in London. No bookings, counter only, worth every minute of the queue.',tags:['Tapas','Spanish','Counter','Seafood'],maps:'https://maps.google.com/?q=Barrafina+Covent+Garden'},
   // North London
-  {id:'r20',name:'Ottolenghi',area:'North London',hood:'Islington',type:'restaurant',cuisine:'Mediterranean',diet:['vegetarian','vegan'],rating:4.9,pl:3,cost:'40-70',desc:'Yotam's original. The salad counter alone justifies the trip. Vibrant, generous, essential.',tags:['Mediterranean','Salads','Brunch','Legendary'],maps:'https://maps.google.com/?q=Ottolenghi+Islington'},
+  {id:'r20',name:'Ottolenghi',area:'North London',hood:'Islington',type:'restaurant',cuisine:'Mediterranean',diet:['vegetarian','vegan'],rating:4.9,pl:3,cost:'40-70',desc:'Yotam\'s original. The salad counter alone justifies the trip. Vibrant, generous, essential.',tags:['Mediterranean','Salads','Brunch','Legendary'],maps:'https://maps.google.com/?q=Ottolenghi+Islington'},
   {id:'r21',name:'Rasa',area:'North London',hood:'Stoke Newington',type:'restaurant',cuisine:'Keralan',diet:['vegetarian','vegan'],rating:4.7,pl:2,cost:'20-40',desc:'Legendary Keralan vegetarian cooking. The thali is a revelation. Bring your own wine.',tags:['Indian','Keralan','Curry','Thali','BYOB'],maps:'https://maps.google.com/?q=Rasa+Stoke+Newington'},
   {id:'r22',name:'Stem & Glory',area:'North London',hood:'Camden',type:'restaurant',cuisine:'Vegan',diet:['vegan','vegetarian'],rating:4.6,pl:2,cost:'20-40',desc:'Plant-based cooking that wins over even committed carnivores. A Camden essential.',tags:['Vegan','Plant-based','Brunch','Camden'],maps:'https://maps.google.com/?q=Stem+Glory+Camden'},
-  {id:'r23',name:'Rotunda',area:'North London',hood:'Kings Cross',type:'restaurant',cuisine:'Modern European',diet:[],rating:4.6,pl:3,cost:'40-70',desc:'Stunning canal-side restaurant in King's Cross. The terrace in summer is unmissable.',tags:['Canal','Terrace','Modern European','Kings Cross'],maps:'https://maps.google.com/?q=Rotunda+Kings+Cross'},
+  {id:'r23',name:'Rotunda',area:'North London',hood:'Kings Cross',type:'restaurant',cuisine:'Modern European',diet:[],rating:4.6,pl:3,cost:'40-70',desc:'Stunning canal-side restaurant in King\'s Cross. The terrace in summer is unmissable.',tags:['Canal','Terrace','Modern European','Kings Cross'],maps:'https://maps.google.com/?q=Rotunda+Kings+Cross'},
   // East London
   {id:'r24',name:'Mao Chow',area:'East London',hood:'Hackney',type:'restaurant',cuisine:'Vegan Chinese',diet:['vegan','vegetarian'],rating:4.7,pl:1,cost:'under20',desc:'Vegan Chinese that genuinely slaps. Bold, punchy flavours with zero compromise.',tags:['Vegan','Chinese','Asian','Dumplings'],maps:'https://maps.google.com/?q=Mao+Chow+Hackney'},
   {id:'r25',name:'Brat',area:'East London',hood:'Shoreditch',type:'restaurant',cuisine:'Basque',diet:[],rating:4.9,pl:4,cost:'70plus',desc:'Michelin-starred wood-fire cooking. The whole turbot is as good as dining gets.',tags:['Michelin star','Basque','Fire cooking','Special occasion'],maps:'https://maps.google.com/?q=Brat+Restaurant+London'},
@@ -587,7 +607,7 @@ const venues = [
   {id:'r28',name:'Leroy',area:'East London',hood:'Shoreditch',type:'bar',cuisine:'Wine Bar',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Outstanding natural wine bar with brilliant small plates. The wine list is a journey.',tags:['Natural wine','Small plates','Wine bar','Shoreditch'],maps:'https://maps.google.com/?q=Leroy+Restaurant+Shoreditch'},
   {id:'r29',name:'E Pellicci',area:'East London',hood:'Bethnal Green',type:'cafe',cuisine:'Italian Caff',diet:[],rating:4.8,pl:1,cost:'under20',desc:'A London institution. Art Nouveau interior, full English breakfast, Italian warmth since 1900.',tags:['Breakfast','Full English','Iconic','Cash only'],maps:'https://maps.google.com/?q=E+Pellicci+Bethnal+Green'},
   // South London
-  {id:'r30',name:'Ganapati',area:'South London',hood:'Peckham',type:'restaurant',cuisine:'South Indian',diet:['vegetarian','vegan'],rating:4.8,pl:2,cost:'20-40',desc:'Tiny, beloved Keralan cooking. The dosas are legendary. Book weeks ahead — it's worth it.',tags:['Indian','Dosas','Curry','BYOB'],maps:'https://maps.google.com/?q=Ganapati+Peckham'},
+  {id:'r30',name:'Ganapati',area:'South London',hood:'Peckham',type:'restaurant',cuisine:'South Indian',diet:['vegetarian','vegan'],rating:4.8,pl:2,cost:'20-40',desc:'Tiny, beloved Keralan cooking. The dosas are legendary. Book weeks ahead — it\'s worth it.',tags:['Indian','Dosas','Curry','BYOB'],maps:'https://maps.google.com/?q=Ganapati+Peckham'},
   {id:'r31',name:'Salon',area:'South London',hood:'Brixton',type:'restaurant',cuisine:'Modern British',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'Intimate dining above Brixton Village. Seasonal tasting menu and extraordinary natural wine.',tags:['Tasting menu','Natural wine','British','Intimate'],maps:'https://maps.google.com/?q=Salon+Brixton'},
   {id:'r32',name:'Peckham Bazaar',area:'South London',hood:'Peckham',type:'restaurant',cuisine:'Balkan',diet:[],rating:4.7,pl:2,cost:'20-40',desc:'Brilliant Balkan-inspired cooking in a railway arch. The lamb and yoghurt dishes shine.',tags:['Balkan','Lamb','Arch','BYOB'],maps:'https://maps.google.com/?q=Peckham+Bazaar'},
   {id:'r33',name:'Kudu',area:'South London',hood:'Peckham',type:'restaurant',cuisine:'South African',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'South African-inspired modern cooking at its most exciting. Exceptional natural wine list.',tags:['South African','Peckham','Natural wine','Modern'],maps:'https://maps.google.com/?q=Kudu+Restaurant+Peckham'},
@@ -596,19 +616,19 @@ const venues = [
   {id:'r35',name:'Dinings SW3',area:'West London',hood:'Chelsea',type:'restaurant',cuisine:'Japanese',diet:[],rating:4.7,pl:4,cost:'70plus',desc:'Japanese-European fusion at its finest. The omakase menu is a beautiful journey.',tags:['Sushi','Japanese','Chelsea','Omakase'],maps:'https://maps.google.com/?q=Dinings+SW3'},
   {id:'r36',name:'The River Café',area:'West London',hood:'Hammersmith',type:'restaurant',cuisine:'Italian',diet:[],rating:4.8,pl:4,cost:'70plus',desc:'The legendary riverside Italian. Birthplace of a generation of chefs. A London institution.',tags:['Italian','Pasta','Riverside','Legendary'],maps:'https://maps.google.com/?q=River+Cafe+London'},
   // Markets
-  {id:'m1',name:'Borough Market',area:'Central London',hood:'London Bridge',type:'market',cuisine:'Food Market',diet:['vegetarian','vegan','halal'],rating:4.8,pl:1,cost:'under20',desc:'London's greatest food market. World-class produce, street food, artisan goods. Go hungry.',tags:['Market','Street food','Produce','Thu–Sat'],maps:'https://maps.google.com/?q=Borough+Market'},
+  {id:'m1',name:'Borough Market',area:'Central London',hood:'London Bridge',type:'market',cuisine:'Food Market',diet:['vegetarian','vegan','halal'],rating:4.8,pl:1,cost:'under20',desc:'London\'s greatest food market. World-class produce, street food, artisan goods. Go hungry.',tags:['Market','Street food','Produce','Thu–Sat'],maps:'https://maps.google.com/?q=Borough+Market'},
   {id:'m2',name:'Broadway Market',area:'East London',hood:'Hackney',type:'market',cuisine:'Street Food Market',diet:['vegetarian','vegan'],rating:4.7,pl:1,cost:'under20',desc:'Saturday market with brilliant street food, artisan bread and genuine community energy.',tags:['Market','Street food','Saturday','Hackney'],maps:'https://maps.google.com/?q=Broadway+Market+Hackney'},
   {id:'m3',name:'Maltby Street Market',area:'South London',hood:'Bermondsey',type:'market',cuisine:'Artisan Market',diet:[],rating:4.6,pl:1,cost:'under20',desc:'The insider alternative to Borough. Smaller, more local, less crowded.',tags:['Market','Artisan','Weekend','Hidden gem'],maps:'https://maps.google.com/?q=Maltby+Street+Market'},
   {id:'m4',name:'Brixton Village',area:'South London',hood:'Brixton',type:'market',cuisine:'Market & Restaurants',diet:['halal','vegan'],rating:4.7,pl:2,cost:'under20',desc:'Covered market packed with brilliant independents from every corner of the world.',tags:['Market','Covered','Diverse','Evenings'],maps:'https://maps.google.com/?q=Brixton+Village'},
   {id:'m5',name:'Portobello Road',area:'West London',hood:'Notting Hill',type:'market',cuisine:'Street Market',diet:[],rating:4.5,pl:1,cost:'under20',desc:'Saturday institution. Antiques, food stalls, and Notting Hill energy in one long street.',tags:['Market','Saturday','Antiques','Notting Hill'],maps:'https://maps.google.com/?q=Portobello+Road+Market'},
   {id:'m6',name:'Mercato Metropolitano',area:'South London',hood:'Elephant & Castle',type:'market',cuisine:'Food Hall',diet:['vegetarian','vegan','halal'],rating:4.6,pl:2,cost:'under20',desc:'Community food market with incredible diversity. Pizza, sushi, Korean, Ethiopian all under one roof.',tags:['Market','Food hall','Diverse','Pizza'],maps:'https://maps.google.com/?q=Mercato+Metropolitano+London'},
   // Cafes
-  {id:'c1',name:'Monmouth Coffee',area:'Central London',hood:'Borough Market',type:'cafe',cuisine:'Specialty Coffee',diet:['vegetarian','vegan'],rating:4.8,pl:1,cost:'under20',desc:'London's most celebrated specialty coffee. Single origins, exceptional brewing, zero fuss.',tags:['Coffee','Brunch','Roastery','Borough'],maps:'https://maps.google.com/?q=Monmouth+Coffee+Borough'},
+  {id:'c1',name:'Monmouth Coffee',area:'Central London',hood:'Borough Market',type:'cafe',cuisine:'Specialty Coffee',diet:['vegetarian','vegan'],rating:4.8,pl:1,cost:'under20',desc:'London\'s most celebrated specialty coffee. Single origins, exceptional brewing, zero fuss.',tags:['Coffee','Brunch','Roastery','Borough'],maps:'https://maps.google.com/?q=Monmouth+Coffee+Borough'},
   {id:'c2',name:'Climpson & Sons',area:'East London',hood:'Broadway Market',type:'cafe',cuisine:'Specialty Coffee',diet:['vegetarian','vegan'],rating:4.7,pl:1,cost:'under20',desc:'East London specialty coffee royalty. Roasted on-site, brewed with care every time.',tags:['Coffee','Brunch','Roastery','East London'],maps:'https://maps.google.com/?q=Climpson+Sons'},
-  {id:'c3',name:'Towpath Café',area:'East London',hood:'Hackney',type:'cafe',cuisine:'Café',diet:['vegetarian'],rating:4.8,pl:1,cost:'under20',desc:'A Regent's Canal institution. Seasonal food, great coffee, and the best setting in London.',tags:['Brunch','Canal','Coffee','Seasonal'],maps:'https://maps.google.com/?q=Towpath+Cafe+London'},
+  {id:'c3',name:'Towpath Café',area:'East London',hood:'Hackney',type:'cafe',cuisine:'Café',diet:['vegetarian'],rating:4.8,pl:1,cost:'under20',desc:'A Regent\'s Canal institution. Seasonal food, great coffee, and the best setting in London.',tags:['Brunch','Canal','Coffee','Seasonal'],maps:'https://maps.google.com/?q=Towpath+Cafe+London'},
   {id:'c4',name:'Pavilion Café',area:'East London',hood:'Victoria Park',type:'cafe',cuisine:'Café & Brunch',diet:['vegetarian','vegan'],rating:4.7,pl:1,cost:'under20',desc:'Lakeside café in Victoria Park. Weekend brunch queue is a London rite of passage.',tags:['Brunch','Park','Weekend','Coffee'],maps:'https://maps.google.com/?q=Pavilion+Cafe+Victoria+Park'},
   // Bars
-  {id:'b1',name:'Lyaness',area:'Central London',hood:'Waterloo',type:'bar',cuisine:'Cocktail Bar',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'Ryan Chetiyawardana's extraordinary cocktail bar. Every drink is a conversation starter.',tags:['Cocktails','Award-winning','South Bank','Natural wine'],maps:'https://maps.google.com/?q=Lyaness+London'},
+  {id:'b1',name:'Lyaness',area:'Central London',hood:'Waterloo',type:'bar',cuisine:'Cocktail Bar',diet:[],rating:4.8,pl:3,cost:'40-70',desc:'Ryan Chetiyawardana\'s extraordinary cocktail bar. Every drink is a conversation starter.',tags:['Cocktails','Award-winning','South Bank','Natural wine'],maps:'https://maps.google.com/?q=Lyaness+London'},
   {id:'b2',name:'Nightjar',area:'East London',hood:'Shoreditch',type:'bar',cuisine:'Speakeasy Bar',diet:[],rating:4.7,pl:3,cost:'40-70',desc:'Prohibition-era speakeasy with extraordinary cocktails and live jazz every night.',tags:['Cocktails','Jazz','Speakeasy','Shoreditch'],maps:'https://maps.google.com/?q=Nightjar+London'},
 ]
 
@@ -629,6 +649,12 @@ async function init() {
   } catch(e) { console.log('Auth check failed:', e); }
   showHome();
 }
+
+// Fallback: if Supabase fails to load, still show the app
+window.addEventListener('error', function(e) {
+  console.log('Script error caught:', e.message);
+  try { showHome(); } catch(err) {}
+});
 
 // ── AUTH ──
 async function googleLogin() {
@@ -849,47 +875,60 @@ function applyFilters() {
 // ── RENDER ──
 function renderVenues(list) {
   window.VM = {};
-  list.forEach(v => { window.VM[v.id] = v; });
-  const el = document.getElementById('venueList');
+  for (var vi = 0; vi < list.length; vi++) { window.VM[list[vi].id] = list[vi]; }
+  var el = document.getElementById("venueList");
   if (!list.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-title">Nothing found</div><div class="empty-sub">Try a different search, or add a venue we're missing.</div><button class="empty-cta" onclick="openAdd()">Add a venue</button></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">Nothing found</div><div class="empty-sub">Try a different search or add a venue.</div><button class="empty-cta" onclick="openAdd()">Add a venue</button></div>';
     return;
   }
-  el.innerHTML = list.map((v, i) => {
-    const saved = !!favs.find(f => f.place_id === v.id);
-    const dmap = { vegan: ['dv','Vegan'], vegetarian: ['dv','Veggie'], halal: ['dh','Halal'], glutenfree: ['dg','GF'] };
-    const dietBadges = (v.diet || []).map(d => {
-      const [cls, lbl] = dmap[d] || ['dv', d];
-      return '<span class="dp ' + cls + '">' + lbl + '</span>';
-    }).join('');
-    return '<div class="vrow" style="animation-delay:' + Math.min(i * 0.035, 0.3) + 's" onclick="window.open('' + v.maps + '','_blank')">' +
-      '<div class="vnum">' + String(i + 1).padStart(2, '0') + '</div>' +
-      '<div class="vmain">' +
-        '<div class="vname-row">' +
-          '<span class="vname">' + v.name + '</span>' +
-          '<span class="vctag">' + v.cuisine + '</span>' +
-          (v.isLive ? '<span class="vlive"><span class="ldot"></span>Live</span>' : '') +
-          '<div class="vdiet">' + dietBadges + '</div>' +
-        '</div>' +
-        '<div class="vmeta">' +
-          '<span>&#128205; ' + v.hood + '</span>' +
-          (v.rating ? '<span class="vsep">&#183;</span><span style="color:var(--gold)">&#9733; ' + v.rating + '</span>' : '') +
-          '<span class="vsep">&#183;</span><span>' + v.type + '</span>' +
-          (v.cost ? '<span class="vsep">&#183;</span><span>' + (costMap[v.cost] || '') + '</span>' : '') +
-        '</div>' +
-        '<div class="vdesc">' + v.desc + '</div>' +
-        '<div class="vtags">' + (v.tags || []).slice(0, 5).map(t => '<span class="vt">' + t + '</span>').join('') + '</div>' +
-      '</div>' +
-      '<div class="vright" onclick="event.stopPropagation()">' +
-        (v.rating ? '<div class="vrating">&#9733; ' + v.rating + '</div>' : '') +
-        '<div class="vprice">' + (priceMap[v.pl] || '££') + '</div>' +
-        '<div class="vactions">' +
-          '<button class="fav-btn' + (saved ? ' saved' : '') + '" data-id="' + v.id + '" onclick="toggleFav(window.VM['' + v.id + ''])">' + (saved ? '&#9829;' : '&#9825;') + '</button>' +
-          '<a class="vlink" href="' + v.maps + '" target="_blank" rel="noopener">Maps</a>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+  var parts = [];
+  var dmap = {vegan:"dv",vegetarian:"dv",halal:"dh",glutenfree:"dg"};
+  var dlbl = {vegan:"Vegan",vegetarian:"Veggie",halal:"Halal",glutenfree:"GF"};
+  for (var i = 0; i < list.length; i++) {
+    var v = list[i];
+    var saved = false;
+    for (var fi = 0; fi < favs.length; fi++) { if (favs[fi].place_id === v.id) { saved = true; break; } }
+    var dietHtml = "";
+    for (var di = 0; di < (v.diet||[]).length; di++) {
+      var d = v.diet[di];
+      dietHtml += '<span class="dp ' + (dmap[d]||"dv") + '">' + (dlbl[d]||d) + "</span>";
+    }
+    var tagHtml = "";
+    var tags = (v.tags||[]).slice(0,5);
+    for (var ti = 0; ti < tags.length; ti++) { tagHtml += '<span class="vt">' + tags[ti] + "</span>"; }
+    var mapsEnc = (v.maps||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+    var row = '<div class="vrow" style="animation-delay:' + Math.min(i*0.035,0.3) + 's" data-maps="' + mapsEnc + '">';
+    row += '<div class="vnum">' + ("0"+(i+1)).slice(-2) + "</div>";
+    row += '<div class="vmain"><div class="vname-row">';
+    row += '<span class="vname">' + v.name + "</span>";
+    row += '<span class="vctag">' + v.cuisine + "</span>";
+    if (v.isLive) { row += '<span class="vlive"><span class="ldot"></span>Live</span>'; }
+    row += '<div class="vdiet">' + dietHtml + "</div></div>";
+    row += '<div class="vmeta"><span>&#128205; ' + v.hood + "</span>";
+    if (v.rating) { row += '<span class="vsep">&#183;</span><span style="color:var(--gold)">&#9733; ' + v.rating + "</span>"; }
+    row += '<span class="vsep">&#183;</span><span>' + v.type + "</span>";
+    if (v.cost && costMap[v.cost]) { row += '<span class="vsep">&#183;</span><span>' + costMap[v.cost] + "</span>"; }
+    row += "</div>";
+    row += '<div class="vdesc">' + v.desc + "</div>";
+    row += '<div class="vtags">' + tagHtml + "</div></div>";
+    row += '<div class="vright" onclick="event.stopPropagation()">';
+    if (v.rating) { row += '<div class="vrating">&#9733; ' + v.rating + "</div>"; }
+    row += '<div class="vprice">' + (priceMap[v.pl]||"££") + "</div>";
+    row += '<div class="vactions">';
+    row += '<button class="fav-btn' + (saved?" saved":"") + '" data-id="' + v.id + '" onclick="toggleFav(window.VM[this.dataset.id])">' + (saved?"&#9829;":"&#9825;") + "</button>";
+    row += '<a class="vlink" href="' + mapsEnc + '" target="_blank" rel="noopener">Maps</a>';
+    row += "</div></div></div>";
+    parts.push(row);
+  }
+  el.innerHTML = parts.join("");
+  var rows = el.querySelectorAll(".vrow");
+  for (var r = 0; r < rows.length; r++) {
+    (function(row) {
+      row.addEventListener("click", function(e) {
+        if (!e.target.closest(".vright")) { window.open(row.dataset.maps, "_blank"); }
+      });
+    })(rows[r]);
+  }
 }
 
 // ── FAVS ──
@@ -928,16 +967,20 @@ function openFavs() { renderFavsList(); document.getElementById('favsPanel').cla
 function closeFavs() { document.getElementById('favsPanel').classList.remove('active'); }
 
 function renderFavsList() {
-  const el = document.getElementById('favsList');
+  var el = document.getElementById("favsList");
   if (!user) { el.innerHTML = '<div class="fempty">Sign in to save your favourite spots.</div>'; return; }
   if (!favs.length) { el.innerHTML = '<div class="fempty">Nothing saved yet. Heart a venue to add it here.</div>'; return; }
-  el.innerHTML = favs.map((f, i) =>
-    '<div class="fitem">' +
-      '<div class="fnum">' + String(i + 1).padStart(2, '0') + '</div>' +
-      '<div style="flex:1"><span class="fname">' + f.name + '</span><span class="farea">' + f.area + (f.rating ? ' · ★ ' + f.rating : '') + '</span></div>' +
-      '<button class="frm" onclick="rmFav('' + f.place_id + '')">Remove</button>' +
-    '</div>'
-  ).join('');
+  var html = "";
+  for (var i = 0; i < favs.length; i++) {
+    var f = favs[i];
+    html += '<div class="fitem">';
+    html += '<div class="fnum">' + ("0"+(i+1)).slice(-2) + "</div>";
+    html += '<div style="flex:1"><span class="fname">' + f.name + "</span>";
+    html += '<span class="farea">' + f.area + (f.rating ? " · ★ " + f.rating : "") + "</span></div>";
+    html += '<button class="frm" data-pid="' + f.place_id + '" onclick="rmFav(this.dataset.pid)">Remove</button>';
+    html += "</div>";
+  }
+  el.innerHTML = html;
 }
 
 async function rmFav(pid) {
@@ -979,7 +1022,7 @@ async function submitVenue() {
 
 // ── QUIZ ──
 const Qs = [
-  { id:'occasion', text:'What's <em>tonight</em> about?', opts:[
+  { id:'occasion', text:'What\'s <em>tonight</em> about?', opts:[
     {e:'&#128145;',l:'Date night',s:'Romantic, impressive'},
     {e:'&#128111;',l:'Out with friends',s:'Fun, groups, loud'},
     {e:'&#129472;',l:'Solo dinner',s:'Just me, no fuss'},
@@ -999,7 +1042,7 @@ const Qs = [
     {e:'&#127795;',l:'North',s:'Islington, Camden'},
     {e:'&#127751;',l:'South',s:'Brixton, Peckham'}
   ]},
-  { id:'budget', text:'What's the <em>budget</em>?', opts:[
+  { id:'budget', text:'What\'s the <em>budget</em>?', opts:[
     {e:'',l:'Under £20 a head',s:'Street food vibes'},
     {e:'',l:'£20–40 a head',s:'Solid night out'},
     {e:'',l:'£40–70 a head',s:'Proper dinner'},
@@ -1029,22 +1072,29 @@ function updDots(idx) {
 }
 
 function showQ(idx) {
-  const q = Qs[idx];
-  document.getElementById('qstage').innerHTML =
-    '<div class="qcard">' +
-      '<div class="qnum">' + (idx + 1) + ' / ' + Qs.length + '</div>' +
-      '<div class="qtext">' + q.text + '</div>' +
-      '<div class="opts">' +
-        q.opts.map((o, i) =>
-          '<button class="opt" onclick="pick('' + q.id + '',' + i + ',this)">' +
-            '<span class="oe">' + o.e + '</span>' +
-            '<span class="ol">' + o.l + '</span>' +
-            '<span class="os">' + o.s + '</span>' +
-          '</button>'
-        ).join('') +
-      '</div>' +
-      '<div class="skip-row"><button class="skip-btn" onclick="showHome()">Skip — take me straight to search</button></div>' +
-    '</div>';
+  var q = Qs[idx];
+  var optsHtml = "";
+  for (var i = 0; i < q.opts.length; i++) {
+    var o = q.opts[i];
+    optsHtml += '<button class="opt" data-qid="' + q.id + '" data-idx="' + i + '">';
+    optsHtml += '<span class="oe">' + o.e + "</span>";
+    optsHtml += '<span class="ol">' + o.l + "</span>";
+    optsHtml += '<span class="os">' + o.s + "</span>";
+    optsHtml += "</button>";
+  }
+  var html = '<div class="qcard">';
+  html += '<div class="qnum">' + (idx+1) + " / " + Qs.length + "</div>";
+  html += '<div class="qtext">' + q.text + "</div>";
+  html += '<div class="opts">' + optsHtml + "</div>";
+  html += '<div class="skip-row"><button class="skip-btn" onclick="showHome()">Skip and go to search</button></div>';
+  html += "</div>";
+  document.getElementById("qstage").innerHTML = html;
+  var btns = document.getElementById("qstage").querySelectorAll(".opt");
+  for (var b = 0; b < btns.length; b++) {
+    btns[b].addEventListener("click", function() {
+      pick(this.dataset.qid, parseInt(this.dataset.idx), this);
+    });
+  }
 }
 
 function pick(qid, idx, btn) {
